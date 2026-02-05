@@ -36,3 +36,53 @@ Als je een specifieke versie van het image van ODRC wil vastpinnen, zet je dit i
 | `ODRC_API_KEY`             | De geheime sleutel voor de ODRC (Registratiecomponent) waarmee gekoppeld moet worden. <details> <summary>Meer informatie </summary>Bijvoorbeeld: `VM2B!ccnebNe.M*gxH63*NXc8iTiAGhp`</details>                    |
 | `UPLOAD_TIMEOUT_MINUTES`   | Het aantal minuten dat het uploaden van bestanden maximaal mag duren. <br/> (default waarde is `10`)                                                                                                             |
 | `DOWNLOAD_TIMEOUT_MINUTES` | Het aantal minuten dat het downloaden van bestanden maximaal mag duren. <br/> (default waarde is `10`)                                                                                                           |
+| `WOO_HOO_BASE_URL`         | De base URL van de woo-hoo AI metadata service. <details> <summary>Meer informatie </summary>Bijvoorbeeld: `http://woo-hoo:8003`</details>                                                                       |
+| `WOO_HOO_HEALTH_TIMEOUT_SECONDS` | Timeout voor health checks naar woo-hoo service. <br/> (default waarde is `5`)                                                                                                                             |
+| `WOO_HOO_GENERATE_TIMEOUT_SECONDS` | Timeout voor metadata generatie requests naar woo-hoo. <br/> (default waarde is `60`)                                                                                                                    |
+
+## AI Metadata Generatie
+
+ODPC integreert met de [woo-hoo](../woo-hoo) service voor AI-gestuurde metadata suggesties. Deze feature analyseert geüploade documenten en genereert DIWOO-conforme metadata suggesties.
+
+### Hoe het werkt
+
+1. **Beschikbaarheid check**: De frontend controleert of de woo-hoo service beschikbaar is via `/api/v1/metadata/health`
+2. **Preview genereren**: Bij het klikken op "Metadata genereren" wordt het document naar woo-hoo gestuurd voor analyse
+3. **Suggesties bekijken**: Een modal toont alle AI-gegenereerde suggesties met:
+   - Publicatie-niveau velden (titel, samenvatting, onderwerpen, etc.)
+   - Document-niveau velden per bijlage (documentdatum, bestandsnaam)
+4. **Selectief toepassen**: Gebruikers selecteren welke suggesties ze willen overnemen
+
+### Preview Modal
+
+De metadata preview modal biedt de volgende functionaliteit:
+
+- **Velden met bestaande waarden**: Worden gemarkeerd met een oranje rand en tonen de huidige waarde doorgestreept
+- **"Velden met bestaande waarden overslaan" checkbox**:
+  - **Aangevinkt (default)**: Velden die al door de gebruiker zijn ingevuld worden uitgesloten van selectie. Dit beschermt handmatig ingevoerde data tegen overschrijving.
+  - **Uitgevinkt**: Alle velden zijn selecteerbaar, ook degene met bestaande waarden
+- **Toepassen knop**: Geeft het aantal geselecteerde suggesties weer en past alleen de geselecteerde velden toe
+
+### Frontend API (Composable)
+
+De `useGenerateMetadata` composable biedt twee hoofdfuncties:
+
+```typescript
+// 1. Genereer preview met suggesties
+const preview = await generateMetadataPreview(
+  publicatie,    // Huidige publicatie data
+  documenten,    // Lijst van documenten
+  mainDocUuid    // UUID van het hoofddocument voor analyse
+);
+
+// 2. Pas geselecteerde suggesties toe
+const { publicatie, documenten } = applyMetadataSuggestions(preview);
+```
+
+### Vereiste configuratie
+
+Om AI metadata generatie te activeren:
+
+1. Zorg dat de `woo-hoo` service draait (zie [woo-hoo README](../woo-hoo/README.md))
+2. Configureer `WOO_HOO_BASE_URL` in de ODPC omgevingsvariabelen
+3. De frontend toont automatisch de "Metadata genereren" knop als de service beschikbaar is
