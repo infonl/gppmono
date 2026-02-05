@@ -282,25 +282,122 @@ seed-test-data:
     @docker compose exec gpp-app dotnet /app/publish/ODPC.dll --seed-test-data || echo "Seed data command not available - data may need manual setup"
 
 # =============================================================================
-# QUICK START
+# LOCAL DEVELOPMENT - SINGLE COMMAND
 # =============================================================================
 
-# First-time setup: create .env, build, and start
+# Start entire stack for local development (the main command you'll use)
+local *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "=== GPP Local Development ==="
+    echo ""
+
+    # Ensure .env exists
+    if [ ! -f .env ]; then
+        echo "Creating .env from .env.example..."
+        cp .env.example .env
+        echo "⚠️  Created .env - you may need to add OPENROUTER_API_KEY"
+        echo ""
+    fi
+
+    # Check for OPENROUTER_API_KEY
+    if grep -q "^OPENROUTER_API_KEY=$" .env 2>/dev/null || ! grep -q "^OPENROUTER_API_KEY=" .env 2>/dev/null; then
+        echo "⚠️  Warning: OPENROUTER_API_KEY not set in .env"
+        echo "   woo-hoo LLM features won't work without it"
+        echo "   Get a key at: https://openrouter.ai/keys"
+        echo ""
+    fi
+
+    # Build if images don't exist
+    if ! docker images | grep -q "gppmono-gpp-app" 2>/dev/null; then
+        echo "Building Docker images (first run, this takes a while)..."
+        docker compose build
+        echo ""
+    fi
+
+    # Start everything
+    echo "Starting all services..."
+    docker compose up -d {{ARGS}}
+
+    echo ""
+    echo "Waiting for services to be healthy..."
+
+    # Wait for postgres
+    echo -n "  PostgreSQL: "
+    for i in {1..30}; do
+        if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for redis
+    echo -n "  Redis: "
+    for i in {1..10}; do
+        if docker compose exec -T redis redis-cli ping > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 10 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for publicatiebank
+    echo -n "  Publicatiebank: "
+    for i in {1..60}; do
+        if curl -sf http://localhost:8002/ > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 2
+        if [ $i -eq 60 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for gpp-app
+    echo -n "  GPP-App: "
+    for i in {1..60}; do
+        if curl -sf http://localhost:62230/api/me > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 2
+        if [ $i -eq 60 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for woo-hoo
+    echo -n "  woo-hoo: "
+    for i in {1..30}; do
+        if curl -sf http://localhost:8003/health > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
+    done
+
+    echo ""
+    echo "=== Local Development Ready ==="
+    echo ""
+    echo "Access URLs:"
+    echo "  📱 Main App:        http://localhost:62230"
+    echo "  📚 Publicatiebank:  http://localhost:8002/admin  (admin/admin)"
+    echo "  📁 OpenZaak:        http://localhost:8001/admin  (admin/admin)"
+    echo "  🤖 woo-hoo API:     http://localhost:8003/docs"
+    echo ""
+    echo "Commands:"
+    echo "  just logs          # View all logs"
+    echo "  just logs gpp-app  # View specific service logs"
+    echo "  just health        # Check service health"
+    echo "  just down          # Stop everything"
+    echo ""
+
+# =============================================================================
+# QUICK START (alias for local)
+# =============================================================================
+
+# First-time setup: create .env, build, and start (alias for 'local')
 quickstart:
-    @echo "=== GPP Monorepo Quick Start ==="
-    @just setup-env
-    @echo ""
-    @echo "Building images (this may take a while)..."
-    @just build
-    @echo ""
-    @echo "Starting services..."
-    @just up-d
-    @echo ""
-    @echo "Waiting for services to be ready..."
-    @sleep 30
-    @just health
-    @echo ""
-    @echo "=== Quick Start Complete ==="
-    @echo ""
-    @echo "NOTE: You need to set OPENROUTER_API_KEY in .env for woo-hoo to work!"
-    @echo "Get a key at: https://openrouter.ai"
+    @just local

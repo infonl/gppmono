@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GPPMono is a monorepo for all things gpp. The project is in its initial setup phase.
 
+I'm on macos on ARM architecture using zsh as default shell.
+Commands should ork for this setup but also for standard Linux. Docker containers should also be buildable on standard Linux for x86 chips.
+
 ## Current Status
 
 This repository is newly created with only a README.md. As the project develops, this file should be updated with:
