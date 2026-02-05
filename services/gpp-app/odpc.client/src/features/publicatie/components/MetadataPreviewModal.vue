@@ -205,19 +205,20 @@ const onClose = () => {
 	}
 };
 
-// Auto-deselect filled fields when skipFilledFields changes
+// Toggle selection of filled fields when skipFilledFields changes
 watch(skipFilledFields, (skip) => {
-	if (skip && props.data) {
-		for (const suggestion of props.data.publicationSuggestions) {
-			if (suggestion.currentValue) {
-				suggestion.selected = false;
-			}
+	if (!props.data) return;
+
+	for (const suggestion of props.data.publicationSuggestions) {
+		if (suggestion.currentValue) {
+			// When skip is ON, deselect filled fields; when OFF, select them
+			suggestion.selected = !skip;
 		}
-		for (const doc of props.data.documentSuggestions) {
-			for (const suggestion of doc.fields) {
-				if (suggestion.currentValue) {
-					suggestion.selected = false;
-				}
+	}
+	for (const doc of props.data.documentSuggestions) {
+		for (const suggestion of doc.fields) {
+			if (suggestion.currentValue) {
+				suggestion.selected = !skip;
 			}
 		}
 	}
