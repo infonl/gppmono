@@ -1,0 +1,85 @@
+# Docker Compose for local development
+# Follows GPP-Woo deployment patterns
+
+services:
+  woo-hoo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - COMMIT_HASH=${COMMIT_HASH:-local}
+        - RELEASE=${RELEASE:-dev}
+    image: woo-hoo:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # Required: OpenRouter API key
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # Application settings
+      - APP_NAME=${APP_NAME:-woo-hoo}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      - DEBUG=${DEBUG:-false}
+      # Logging (json for production-like, console for development)
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-console}
+      # LLM settings
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-mistralai/mistral-large-2512}
+      - FALLBACK_MODEL=${FALLBACK_MODEL:-mistralai/mistral-small-3.2-24b-instruct-2506}
+      - MAX_TEXT_LENGTH=${MAX_TEXT_LENGTH:-15000}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.1}
+      - LLM_TIMEOUT_SECONDS=${LLM_TIMEOUT_SECONDS:-60}
+      - LLM_MAX_RETRIES=${LLM_MAX_RETRIES:-3}
+      # GPP Integration (optional)
+      - GPP_PUBLICATIEBANK_URL=${GPP_PUBLICATIEBANK_URL:-}
+      - GPP_API_TOKEN=${GPP_API_TOKEN:-}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - woo-hoo-logs:/app/log
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Development mode with hot reload
+  woo-hoo-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=console
+      - GPP_PUBLICATIEBANK_URL=${GPP_PUBLICATIEBANK_URL:-}
+      - GPP_API_TOKEN=${GPP_API_TOKEN:-}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./src:/app/src:ro
+    command: ["uv", "run", "uvicorn", "woo_hoo.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    profiles:
+      - dev
+
+  # Test runner service
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-test-key}
+    profiles:
+      - test
+
+volumes:
+  woo-hoo-logs:

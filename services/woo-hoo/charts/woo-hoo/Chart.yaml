@@ -1,0 +1,19 @@
+apiVersion: v2
+name: woo-hoo
+description: LLM-powered DIWOO metadata generation service for Dutch government documents
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - woo
+  - diwoo
+  - metadata
+  - llm
+  - dutch-government
+  - gpp
+home: https://github.com/GPP-Woo/woo-hoo
+sources:
+  - https://github.com/GPP-Woo/woo-hoo
+maintainers:
+  - name: GPP-Woo
+    url: https://github.com/GPP-Woo

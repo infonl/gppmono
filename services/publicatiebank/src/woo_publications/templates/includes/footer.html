@@ -1,0 +1,29 @@
+{% extends "maykin_common/api/includes/footer.html" %}
+{% load static i18n capture_tags %}
+
+{% block footer %}
+    {% capture as issues_link silent %}<a class="link link--muted" href="https://github.com/GPP-Woo/GPP-publicatiebank/issues">issues</a>{% endcapture %}
+
+    {% with issues_link=issues_link %}
+        {{ block.super }}
+    {% endwith %}
+
+{% endblock %}
+
+{% block links %}
+    <li>
+        <a class="link link--muted" href="https://gpp-publicatiebank.readthedocs.io/">
+            {% trans "Documentation" %}
+        </a>
+    </li>
+    <li>
+        <a class="link link--muted" href="https://github.com/GPP-Woo/GPP-publicatiebank/pkgs/container/gpp-publicatiebank">
+            {% trans "Docker image" %}
+        </a>
+    </li>
+    <li>
+        <a class="link link--muted" href="https://github.com/GPP-Woo/GPP-publicatiebank">
+            {% trans "Code on Github" %}
+        </a>
+    </li>
+{% endblock %}

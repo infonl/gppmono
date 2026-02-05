@@ -1,0 +1,65 @@
+# Helm values for local minikube deployment
+# Usage: helm install woo-hoo ./charts/woo-hoo -f deploy/local/values-local.yaml
+
+# Use locally built image
+image:
+  repository: woo-hoo
+  tag: latest
+  pullPolicy: Never  # Use local image, don't pull from registry
+
+# Single replica for local dev
+replicaCount: 1
+
+# Lower resource limits for local
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Application config (non-sensitive)
+config:
+  appName: woo-hoo
+  appUrl: http://woo-hoo.local
+  debug: true
+  logLevel: DEBUG
+  logFormat: console  # Human-readable for local dev
+
+  # LLM settings
+  defaultModel: mistralai/mistral-large-2512
+  fallbackModel: mistralai/mistral-small-3.2-24b-instruct-2506
+  maxTextLength: 15000
+  llmTemperature: "0.1"
+  llmTimeoutSeconds: 60
+  llmMaxRetries: 3
+
+  # GPP Integration (set URL if running publicatiebank locally)
+  gppPublicatiebankUrl: ""
+
+# Use existing secret created by deploy script
+existingSecret: woo-hoo-secrets
+
+# Enable ingress for local access via woo-hoo.local
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: woo-hoo.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Disable persistence for local
+persistence:
+  enabled: false
+
+# Faster probe timings for local dev
+livenessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  initialDelaySeconds: 3
+  periodSeconds: 5

@@ -1,0 +1,25 @@
+# Pure python dependencies
+celery
+furl
+Pillow
+structlog
+
+# Django packages
+django~=5.2
+django-axes[ipware]
+django-capture-tag
+django-fsm-2
+django-hijack
+django-rosetta
+django-solo
+django-structlog[celery]
+django-stubs-ext
+django-timeline-logger
+django-treebeard
+django-upgrade-check
+maykin-common[axes,mfa]
+
+# DRF & other API tooling
+open-api-framework
+djangorestframework-recursive
+drf-polymorphic

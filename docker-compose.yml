@@ -1,0 +1,295 @@
+# GPP Monorepo - Unified Docker Compose for Local Development
+# All GPP services orchestrated for local development and testing
+
+x-common-env: &common-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: localdev
+  POSTGRES_HOST: postgres
+  DB_HOST: postgres
+  DB_PORT: 5432
+
+x-redis-env: &redis-env
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+
+services:
+  # =============================================================================
+  # INFRASTRUCTURE
+  # =============================================================================
+
+  postgres:
+    image: postgis/postgis:${PG_VERSION:-16-master}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_PASSWORD: localdev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx:/etc/nginx/conf.d:ro
+    depends_on:
+      gpp-app:
+        condition: service_started
+      publicatiebank:
+        condition: service_healthy
+      woo-hoo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/nginx-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # =============================================================================
+  # OPENZAAK - Document Management System
+  # =============================================================================
+
+  openzaak:
+    image: openzaak/open-zaak:${OPENZAAK_VERSION:-1.14.0}
+    environment: &openzaak-env
+      DJANGO_SETTINGS_MODULE: openzaak.conf.patched_settings
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-openzaak-dev-key-change-in-production}
+      ALLOWED_HOSTS: openzaak,openzaak.docker.internal,localhost
+      DB_NAME: openzaak
+      DB_USER: postgres
+      DB_PASSWORD: localdev
+      DB_HOST: postgres
+      IS_HTTPS: "no"
+      CACHE_DEFAULT: redis:6379/1
+      CACHE_AXES: redis:6379/1
+      OPENZAAK_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: admin
+      OPENZAAK_SUPERUSER_EMAIL: admin@localhost
+      DISABLE_2FA: "true"
+      CELERY_BROKER_URL: redis://redis:6379/2
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      NOTIFICATIONS_DISABLED: "true"
+      JWT_EXPIRY: "99999999999"
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-2}
+      SENDFILE_BACKEND: django_sendfile.backends.simple
+    volumes:
+      - ./services/gpp-app/docker/open-zaak/fixtures:/app/fixtures
+      - ./services/gpp-app/docker/open-zaak/patched_settings.py:/app/src/openzaak/conf/patched_settings.py
+      - openzaak-media:/app/media
+      - openzaak-private-media:/app/private-media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      openzaak-celery:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "openzaak.docker.internal:host-gateway"
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
+  openzaak-celery:
+    image: openzaak/open-zaak:${OPENZAAK_VERSION:-1.14.0}
+    environment: *openzaak-env
+    volumes:
+      - ./services/gpp-app/docker/open-zaak/fixtures:/app/fixtures
+      - ./services/gpp-app/docker/open-zaak/patched_settings.py:/app/src/openzaak/conf/patched_settings.py
+      - openzaak-media:/app/media
+      - openzaak-private-media:/app/private-media
+    command: /celery_worker.sh
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # GPP-PUBLICATIEBANK (ODRC) - Publication Registry
+  # =============================================================================
+
+  publicatiebank:
+    image: maykinmedia/woo-publications:${PUBLICATIEBANK_VERSION:-latest}
+    pull_policy: always
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["/start.sh"]
+    environment: &publicatiebank-env
+      DJANGO_SETTINGS_MODULE: woo_publications.conf.docker
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-publicatiebank-dev-key-change-in-production}
+      DB_NAME: woo_publications
+      DB_USER: postgres
+      DB_HOST: postgres
+      DB_PASSWORD: localdev
+      CACHE_DEFAULT: redis:6379/0
+      CACHE_AXES: redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      ODRC_SUPERUSER_USERNAME: admin
+      ODRC_SUPERUSER_EMAIL: admin@localhost
+      DISABLE_2FA: "true"
+      DJANGO_SUPERUSER_PASSWORD: admin
+      ALLOWED_HOSTS: "*"
+      SHOW_ENVIRONMENT: "yes"
+      ENVIRONMENT_LABEL: local-dev
+      ENVIRONMENT_BACKGROUND_COLOR: "#1d63ed"
+      ENVIRONMENT_FOREGROUND_COLOR: white
+      DEBUG: "True"
+    volumes:
+      - ./docker/fixtures:/app/fixtures
+      - ./services/gpp-app/docker/odrc/patches:/app/patches
+      - ./services/gpp-app/docker/odrc/entrypoint.sh:/app/entrypoint.sh
+      - publicatiebank-media:/app/media
+      - publicatiebank-log:/app/log
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "openzaak.docker.internal:host-gateway"
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\""]
+      interval: 5s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+  publicatiebank-celery:
+    image: maykinmedia/woo-publications:${PUBLICATIEBANK_VERSION:-latest}
+    pull_policy: always
+    environment: *publicatiebank-env
+    command: /celery_worker.sh
+    volumes:
+      - publicatiebank-media:/app/media
+      - publicatiebank-log:/app/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # GPP-APP (ODPC) - Publication Composer (.NET + Vue)
+  # =============================================================================
+
+  gpp-app:
+    build:
+      context: ./services/gpp-app
+      dockerfile: ODPC.Server/Dockerfile
+    environment:
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ODPC
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localdev
+      # ASP.NET
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      # ODRC Integration
+      ODRC_BASE_URL: http://publicatiebank:8000/
+      ODRC_API_KEY: ${ODRC_API_KEY:-insecure-ea1a8d297e3b2d3313b8a30b18959c3}
+      # woo-hoo Integration (for metadata generation)
+      WOO_HOO_BASE_URL: http://woo-hoo:8000
+      WOO_HOO_HEALTH_TIMEOUT_SECONDS: 30
+      WOO_HOO_GENERATE_TIMEOUT_SECONDS: 120
+      # Authentication - NO OIDC for local dev (auto-login as admin)
+      OIDC_ADMIN_ROLE: odpc-admin
+      # OIDC_AUTHORITY is intentionally NOT set - this enables dev auto-login
+    ports:
+      - "62230:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      publicatiebank:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/me"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # =============================================================================
+  # WOO-HOO - LLM Metadata Generation Service
+  # =============================================================================
+
+  woo-hoo:
+    build:
+      context: ./services/woo-hoo
+      dockerfile: Dockerfile
+    environment:
+      # API Keys
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Application Config
+      APP_NAME: woo-hoo
+      APP_URL: http://localhost:8003
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+      LOG_FORMAT: console
+      # LLM Settings
+      DEFAULT_MODEL: ${WOO_HOO_MODEL:-mistralai/mistral-large-2512}
+      FALLBACK_MODEL: mistralai/mistral-small-3.2-24b-instruct-2506
+      MAX_TEXT_LENGTH: 15000
+      LLM_TEMPERATURE: 0.1
+      LLM_TIMEOUT_SECONDS: 60
+      LLM_MAX_RETRIES: 3
+      # GPP Integration
+      GPP_PUBLICATIEBANK_URL: http://publicatiebank:8000
+      GPP_API_TOKEN: ${ODRC_API_KEY:-insecure-ea1a8d297e3b2d3313b8a30b18959c3}
+    ports:
+      - "8003:8000"
+    volumes:
+      - woo-hoo-logs:/app/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  postgres-data:
+  redis-data:
+  openzaak-media:
+  openzaak-private-media:
+  publicatiebank-media:
+  publicatiebank-log:
+  woo-hoo-logs:

@@ -1,0 +1,33 @@
+{
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "healthz",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_DB": "ODPC",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "localdev",
+        "ODRC_BASE_URL": "http://localhost:8002/",
+        "ODRC_API_KEY": "insecure-ea1a8d297e3b2d3313b8a30b18959c3",
+        "OIDC_ADMIN_ROLE": "odpc-admin"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5252"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/healthz",
+      "environmentVariables": {
+        "ASPNETCORE_HTTP_PORTS": "8080"
+      },
+      "publishAllPorts": true
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
+}

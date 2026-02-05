@@ -1,0 +1,2 @@
+# State directory for autonomous task execution
+# progress.json is gitignored - contains local execution state

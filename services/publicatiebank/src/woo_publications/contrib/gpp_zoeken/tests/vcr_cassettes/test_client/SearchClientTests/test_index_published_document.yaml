@@ -1,0 +1,48 @@
+interactions:
+- request:
+    body: '{"uuid": "23fe5912-646d-4c75-ab93-63ef5a8090db", "publicatie": "d2f49534-1538-43c0-b8e6-1c1f46f2130c",
+      "publisher": {"uuid": "41c74a95-c649-479d-877b-af46d9aa1687", "naam": "threat"},
+      "onderwerpen": [], "informatieCategorieen": [], "identifiers": [], "officieleTitel":
+      "bag", "verkorteTitel": "", "omschrijving": "", "creatiedatum": "2025-08-22",
+      "registratiedatum": "2025-08-27T07:47:05.625385+00:00", "laatstGewijzigdDatum":
+      "2025-08-27T07:47:05.626067+00:00", "gepubliceerdOp": "2025-08-27T07:47:05.625385+00:00",
+      "fileSize": 0, "downloadUrl": ""}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Token insecure-RySD8u5xkb9PH6AJtaZV4Y
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '550'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.4
+    method: POST
+    uri: http://localhost:8002/api/v1/documenten
+  response:
+    body:
+      string: '{"taskId":"da2d8fbf-9ec4-4335-afc8-4b19a77139bb"}'
+    headers:
+      Allow:
+      - POST, OPTIONS
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/json
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Referrer-Policy:
+      - same-origin
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+    status:
+      code: 202
+      message: Accepted
+version: 1

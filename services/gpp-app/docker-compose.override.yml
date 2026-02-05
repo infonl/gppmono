@@ -1,0 +1,15 @@
+services:
+  odpc:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - WOO_HOO_BASE_URL=http://host.docker.internal:8003
+      - WOO_HOO_HEALTH_TIMEOUT_SECONDS=30
+      - WOO_HOO_GENERATE_TIMEOUT_SECONDS=120
+    # volumes:
+    #   - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+
+  # Expose postgres on fixed port for local dev (5434 to avoid conflicts)
+  postgres-db:
+    ports:
+      - "5434:5432"

@@ -1,0 +1,264 @@
+[
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 2,
+        "translations": {
+            "en": "Accounts",
+            "nl": "Gebruikers"
+        },
+        "name": "Accounts",
+        "slug": "accounts",
+        "models": [
+            [
+                "accounts",
+                "organisationmember"
+            ],
+            [
+                "accounts",
+                "organisationunit"
+            ],
+            [
+                "accounts",
+                "user"
+            ],
+            [
+                "auth",
+                "group"
+            ],
+            [
+                "otp_totp",
+                "totpdevice"
+            ],
+            [
+                "two_factor_webauthn",
+                "webauthndevice"
+            ]
+        ]
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 7,
+        "translations": {
+            "en": "WOO publications",
+            "nl": "WOO publicaties"
+        },
+        "name": "WOO publications",
+        "slug": "woo_publications",
+        "models": []
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 5,
+        "translations": {
+            "en": "Logging",
+            "nl": "Logging"
+        },
+        "name": "Logging",
+        "slug": "logging",
+        "models": [
+            [
+                "axes",
+                "accessattempt"
+            ],
+            [
+                "axes",
+                "accessfailurelog"
+            ],
+            [
+                "axes",
+                "accesslog"
+            ],
+            [
+                "log_outgoing_requests",
+                "outgoingrequestslog"
+            ],
+            [
+                "logging",
+                "timelinelogproxy"
+            ]
+        ]
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 6,
+        "translations": {
+            "en": "Configuration",
+            "nl": "Configuratie"
+        },
+        "name": "Configuratie",
+        "slug": "configuration",
+        "models": [
+            [
+                "admin_index",
+                "appgroup"
+            ],
+            [
+                "config",
+                "globalconfiguration"
+            ],
+            [
+                "log_outgoing_requests",
+                "outgoingrequestslogconfig"
+            ],
+            [
+                "mozilla_django_oidc_db",
+                "openidconnectconfig"
+            ],
+            [
+                "simple_certmanager",
+                "certificate"
+            ],
+            [
+                "zgw_consumers",
+                "nlxconfig"
+            ],
+            [
+                "zgw_consumers",
+                "service"
+            ]
+        ]
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 1,
+        "translations": {
+            "nl": "Metagegevens"
+        },
+        "name": "Metadata",
+        "slug": "metadata",
+        "models": [
+            [
+                "metadata",
+                "informationcategory"
+            ],
+            [
+                "metadata",
+                "organisation"
+            ],
+            [
+                "metadata",
+                "theme"
+            ]
+        ]
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 0,
+        "translations": {
+            "en": "Publications"
+        },
+        "name": "Publicaties",
+        "slug": "publicaties",
+        "models": [
+            [
+                "publications",
+                "document"
+            ],
+            [
+                "publications",
+                "publication"
+            ],
+            [
+                "publications",
+                "topic"
+            ]
+        ]
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 7,
+        "translations": {
+            "en": "Useful links"
+        },
+        "name": "Handige links",
+        "slug": "handige-links",
+        "models": []
+    }
+},
+{
+    "model": "admin_index.appgroup",
+    "fields": {
+        "order": 4,
+        "translations": {
+            "en": "API access"
+        },
+        "name": "API-toegang",
+        "slug": "api_access",
+        "models": [
+            [
+                "api",
+                "application"
+            ]
+        ]
+    }
+},
+{
+    "model": "admin_index.applink",
+    "fields": {
+        "order": 0,
+        "translations": {
+            "en": "Documentation"
+        },
+        "app_group": [
+            "handige-links"
+        ],
+        "name": "Documentatie",
+        "link": "https://gpp-publicatiebank.readthedocs.io"
+    }
+},
+{
+    "model": "admin_index.applink",
+    "fields": {
+        "order": 1,
+        "translations": {
+            "en": "Github"
+        },
+        "app_group": [
+            "handige-links"
+        ],
+        "name": "Github",
+        "link": "https://github.com/GPP-Woo"
+    }
+},
+{
+    "model": "admin_index.applink",
+    "fields": {
+        "order": 2,
+        "translations": {
+            "en": "Report a bug"
+        },
+        "app_group": [
+            "handige-links"
+        ],
+        "name": "Bug rapporteren",
+        "link": "https://github.com/GPP-Woo/GPP-publicatiebank/issues/new/choose"
+    }
+},
+{
+    "model": "admin_index.applink",
+    "fields": {
+        "order": 3,
+        "translations": {
+            "en": "API documentation"
+        },
+        "app_group": [
+            "handige-links"
+        ],
+        "name": "API documentatie",
+        "link": "/api/docs/"
+    }
+}
+]

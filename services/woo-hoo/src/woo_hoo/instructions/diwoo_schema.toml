@@ -1,0 +1,307 @@
+# DIWOO XML Schema Instructions for LLM
+# This file defines the expected XML output format for metadata extraction
+
+[metadata]
+name = "DIWOO XML Schema"
+version = "0.9.8"
+description = "DIWOO metadata extraction instructions for Dutch government documents under Wet open overheid (Woo)"
+
+[output]
+format = "xml"
+namespace = "https://standaarden.overheid.nl/diwoo/metadata/"
+prefix = "diwoo"
+
+[rules]
+response_format = "Return ONLY valid XML with the diwoo namespace - no markdown, no explanations"
+date_format = "ISO 8601: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS"
+min_categories = 1
+
+[extraction]
+identifiers = "Look for: kenmerk, zaaknummer, referentienummers, dossiernummer in document header"
+publisher = "The organization publishing this document. Look for: letterhead, ministry name, gemeente naam, signature block organization"
+verantwoordelijke = "Organization responsible for content (if different from publisher). Often in 'namens' phrases"
+opsteller = "Organization that drafted the document (if mentioned). Look for 'opgesteld door'"
+naamOpsteller = "Name(s) of individual author(s). Look in signature block, 'ondertekend door', footer"
+creatiedatum = "Document date. Look for: date field in header, 'Datum:', 'd.d.', date near signature"
+title = "officieleTitel: Full subject line or document header including reference numbers"
+verkorteTitel = "Short title if document has one"
+omschrijvingen = "1-2 sentence summary of what this document is about and its purpose"
+documentsoort = "Type of document: brief, besluit, advies, rapport, nota, verslag, convenant, etc."
+trefwoorden = "3-5 relevant keywords from the document content"
+relations = "Referenced documents, attachments ('bijlage'), earlier correspondence"
+aggregatiekenmerk = "Grouping identifier if document is part of a dossier or series"
+
+# Information categories (Article 3.3 Woo)
+# NOTE: These codes MUST match the InformatieCategorie enum in enums.py
+[categories.WETTEN_AVV]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_4191a648"
+label = "Wetten en algemeen verbindende voorschriften"
+article = "3.3.1a"
+use_when = "Laws, regulations"
+
+[categories.OVERIGE_BESLUITEN_AS]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_237d1cf1"
+label = "Overige besluiten van algemene strekking"
+article = "3.3.1b"
+use_when = "Policy rules, general decisions"
+
+[categories.ONTWERPEN_REGELGEVING]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_fdee54ae"
+label = "Ontwerpen van regelgeving"
+article = "3.3.1c"
+use_when = "Draft legislation"
+
+[categories.ORGANISATIE_WERKWIJZE]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_9f5cc14e"
+label = "Organisatie en werkwijze"
+article = "3.3.1d"
+use_when = "Organizational info"
+
+[categories.BEREIKBAARHEID]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_e8bf4b9e"
+label = "Bereikbaarheidsgegevens"
+article = "3.3.1e"
+use_when = "Contact info"
+
+[categories.INGEKOMEN_STUKKEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_a3a6e5cf"
+label = "Ingekomen stukken"
+article = "3.3.2a"
+use_when = "Incoming documents to parliament"
+
+[categories.VERGADERSTUKKEN_SG]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_7ebb6ba0"
+label = "Vergaderstukken Staten-Generaal"
+article = "3.3.2b"
+use_when = "Parliamentary documents"
+
+[categories.VERGADERSTUKKEN_DECENTRAAL]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_92a74153"
+label = "Vergaderstukken decentraal"
+article = "3.3.2c"
+use_when = "Local council documents"
+
+[categories.AGENDAS_BESLUITENLIJSTEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_5540d806"
+label = "Agenda's en besluitenlijsten"
+article = "3.3.2d"
+use_when = "Agendas, decision lists"
+
+[categories.ADVIEZEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_5ba23c01"
+label = "Adviezen"
+article = "3.3.2e"
+use_when = "Advisory documents"
+
+[categories.CONVENANTEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_9fe65c9f"
+label = "Convenanten"
+article = "3.3.2f"
+use_when = "Agreements, covenants"
+
+[categories.JAARPLANNEN_JAARVERSLAGEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_9b4ab167"
+label = "Jaarplannen en jaarverslagen"
+article = "3.3.2g"
+use_when = "Annual plans/reports"
+
+[categories.SUBSIDIES_ANDERS]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_8ac47458"
+label = "Subsidieverplichtingen"
+article = "3.3.2h"
+use_when = "Non-beschikking subsidies"
+
+[categories.WOO_VERZOEKEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_4edc7ff0"
+label = "Woo-verzoeken en -besluiten"
+article = "3.3.2i"
+use_when = "Woo requests and decisions"
+
+[categories.ONDERZOEKSRAPPORTEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_28fb3d66"
+label = "Onderzoeksrapporten"
+article = "3.3.2j"
+use_when = "Research reports"
+
+[categories.BESCHIKKINGEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_0b6bd881"
+label = "Beschikkingen"
+article = "3.3.2k"
+use_when = "Administrative decisions"
+
+[categories.KLACHTOORDELEN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_b2f30ab9"
+label = "Klachtoordelen"
+article = "3.3.2l"
+use_when = "Complaint rulings"
+
+# Document types (use for documentsoort in classificatiecollectie)
+[documentsoorten.WOO_BESLUIT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_woo_besluit"
+label = "Woo-besluit"
+use_when = "Decision on a Woo request"
+
+[documentsoorten.BRIEF]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_brief"
+label = "brief"
+use_when = "Letter, correspondence"
+
+[documentsoorten.ADVIES]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_advies"
+label = "advies"
+use_when = "Advisory document"
+
+[documentsoorten.RAPPORT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_rapport"
+label = "rapport"
+use_when = "Report"
+
+[documentsoorten.BESLUIT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_besluit"
+label = "besluit"
+use_when = "General decision (not Woo-specific)"
+
+[documentsoorten.BESCHIKKING]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_beschikking"
+label = "beschikking"
+use_when = "Administrative decision/permit"
+
+[documentsoorten.NOTA]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_nota"
+label = "nota"
+use_when = "Policy note, memo"
+
+[documentsoorten.VERSLAG]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_verslag"
+label = "verslag"
+use_when = "Minutes, report of meeting"
+
+[documentsoorten.CONVENANT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_convenant"
+label = "convenant"
+use_when = "Agreement between parties"
+
+[documentsoorten.ONDERZOEKSRAPPORT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_onderzoeksrapport"
+label = "onderzoeksrapport"
+use_when = "Research report"
+
+[documentsoorten.JAARVERSLAG]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_jaarverslag"
+label = "jaarverslag"
+use_when = "Annual report"
+
+[documentsoorten.JAARPLAN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_jaarplan"
+label = "jaarplan"
+use_when = "Annual plan"
+
+[documentsoorten.KLACHTOORDEEL]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_klachtoordeel"
+label = "klachtoordeel"
+use_when = "Complaint ruling"
+
+# Handling types
+[handelingen.REGISTRATIE]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_registratie"
+label = "registratie"
+
+[handelingen.VASTSTELLING]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_vaststelling"
+label = "vaststelling"
+
+[handelingen.PUBLICATIE]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_publicatie"
+label = "publicatie"
+
+# Document relations
+[relaties.HEEFT_BIJLAGE]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_heeft_bijlage"
+label = "heeft bijlage"
+
+[relaties.IS_BIJLAGE_VAN]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_is_bijlage_van"
+label = "is bijlage van"
+
+[relaties.VERVANGT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_vervangt"
+label = "vervangt"
+
+[relaties.WIJZIGT]
+resource = "https://identifier.overheid.nl/tooi/def/thes/kern/c_wijzigt"
+label = "wijzigt"
+
+# XML template example - fill in ALL fields you can extract from the document
+[template]
+xml = """
+<?xml version="1.0" encoding="UTF-8"?>
+<diwoo:Document xmlns:diwoo="https://standaarden.overheid.nl/diwoo/metadata/">
+  <diwoo:DiWoo>
+    <!-- Document identifiers (kenmerk, zaaknummer, etc.) -->
+    <diwoo:identifiers>
+      <diwoo:identifier>kenmerk-123</diwoo:identifier>
+      <diwoo:identifier>zaaknummer-456</diwoo:identifier>
+    </diwoo:identifiers>
+
+    <!-- Publishing organization (REQUIRED) - use TOOI URI from organisatielijst -->
+    <diwoo:publisher resource="https://identifier.overheid.nl/tooi/id/ministerie/mnre1034">Ministerie van ...</diwoo:publisher>
+
+    <!-- Responsible organization if different from publisher -->
+    <diwoo:verantwoordelijke resource="URI">Organization</diwoo:verantwoordelijke>
+
+    <!-- Drafting organization if mentioned -->
+    <diwoo:opsteller resource="URI">Organization</diwoo:opsteller>
+
+    <!-- Author name(s) from signature block -->
+    <diwoo:naamOpsteller>J. de Vries, Directeur</diwoo:naamOpsteller>
+
+    <!-- Title collection (REQUIRED) -->
+    <diwoo:titelcollectie>
+      <diwoo:officieleTitel>Full official title including subject</diwoo:officieleTitel>
+      <diwoo:verkorteTitel>Short title</diwoo:verkorteTitel>
+    </diwoo:titelcollectie>
+
+    <!-- Document summary/description -->
+    <diwoo:omschrijvingen>
+      <diwoo:omschrijving>Brief summary of document content and purpose</diwoo:omschrijving>
+    </diwoo:omschrijvingen>
+
+    <!-- Classification (REQUIRED - at least one informatiecategorie) -->
+    <diwoo:classificatiecollectie>
+      <diwoo:informatiecategorieen>
+        <diwoo:informatiecategorie resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_4edc7ff0">Woo-verzoeken</diwoo:informatiecategorie>
+      </diwoo:informatiecategorieen>
+      <diwoo:documentsoorten>
+        <diwoo:documentsoort resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_woo_besluit">Woo-besluit</diwoo:documentsoort>
+      </diwoo:documentsoorten>
+      <diwoo:trefwoorden>
+        <diwoo:trefwoord>keyword1</diwoo:trefwoord>
+        <diwoo:trefwoord>keyword2</diwoo:trefwoord>
+      </diwoo:trefwoorden>
+    </diwoo:classificatiecollectie>
+
+    <!-- Creation date -->
+    <diwoo:creatiedatum>2025-01-15</diwoo:creatiedatum>
+
+    <!-- Document language (default: Nederlands) -->
+    <diwoo:language resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_nl">Nederlands</diwoo:language>
+
+    <!-- Document handling actions (REQUIRED - at least one) -->
+    <diwoo:documenthandelingen>
+      <diwoo:documenthandeling>
+        <diwoo:soortHandeling resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_vaststelling">vaststelling</diwoo:soortHandeling>
+        <diwoo:atTime>2025-01-15T00:00:00</diwoo:atTime>
+        <diwoo:wasAssociatedWith resource="URI">Organization</diwoo:wasAssociatedWith>
+      </diwoo:documenthandeling>
+    </diwoo:documenthandelingen>
+
+    <!-- Document relations (bijlagen, references) -->
+    <diwoo:documentrelaties>
+      <diwoo:documentrelatie>
+        <diwoo:role resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_heeft_bijlage">heeft bijlage</diwoo:role>
+        <diwoo:relation>Bijlage 1: Document title</diwoo:relation>
+      </diwoo:documentrelatie>
+    </diwoo:documentrelaties>
+  </diwoo:DiWoo>
+</diwoo:Document>
+"""

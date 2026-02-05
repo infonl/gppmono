@@ -1,0 +1,48 @@
+interactions:
+- request:
+    body: '{"uuid": "f1f00a29-e8a0-42fc-9ed8-8149fd483c10", "publisher": {"uuid":
+      "6baf30f2-db76-47d1-9256-82e563b7ece8", "naam": "drug"}, "onderwerpen": [],
+      "informatieCategorieen": [], "identifiers": [], "officieleTitel": "could", "verkorteTitel":
+      "", "omschrijving": "", "registratiedatum": "2025-08-27T07:47:05.718406+00:00",
+      "laatstGewijzigdDatum": "2025-08-27T07:47:05.719029+00:00", "gepubliceerdOp":
+      "2025-08-27T07:47:05.718406+00:00", "datumBeginGeldigheid": null, "datumEindeGeldigheid":
+      null}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - Token insecure-RySD8u5xkb9PH6AJtaZV4Y
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '492'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.32.4
+    method: POST
+    uri: http://localhost:8002/api/v1/publicaties
+  response:
+    body:
+      string: '{"taskId":"f9291131-02a1-4ca2-b1f6-9b323e9c0243"}'
+    headers:
+      Allow:
+      - POST, OPTIONS
+      Content-Length:
+      - '49'
+      Content-Type:
+      - application/json
+      Cross-Origin-Opener-Policy:
+      - same-origin
+      Referrer-Policy:
+      - same-origin
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - DENY
+    status:
+      code: 202
+      message: Accepted
+version: 1

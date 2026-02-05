@@ -1,0 +1,93 @@
+# Example Helm values for production deployment
+# Copy to your deployment repo and customize
+
+# Image from GitHub Container Registry
+image:
+  repository: ghcr.io/gpp-woo/woo-hoo
+  tag: "0.1.0"  # Pin to specific version
+  pullPolicy: IfNotPresent
+
+# Multiple replicas for HA
+replicaCount: 2
+
+# Production resources
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# Enable autoscaling for production load
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# Application config (non-sensitive values only)
+config:
+  appName: woo-hoo
+  appUrl: https://woo-hoo.example.com
+  debug: false
+  logLevel: INFO
+  logFormat: json  # Structured logging for production
+
+  # LLM settings
+  defaultModel: mistralai/mistral-large-2512
+  fallbackModel: mistralai/mistral-small-3.2-24b-instruct-2506
+  maxTextLength: 15000
+  llmTemperature: "0.1"
+  llmTimeoutSeconds: 60
+  llmMaxRetries: 3
+
+  # GPP Integration
+  gppPublicatiebankUrl: http://gpp-publicatiebank.gpp-woo.svc.cluster.local:8000
+
+# IMPORTANT: Use existing secret for sensitive data
+# Create the secret beforehand:
+#   kubectl create secret generic woo-hoo-secrets \
+#     --from-literal=OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+#     --from-literal=GPP_API_TOKEN=$GPP_API_TOKEN
+existingSecret: woo-hoo-secrets
+
+# Production ingress with TLS
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: woo-hoo.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: woo-hoo-tls
+      hosts:
+        - woo-hoo.example.com
+
+# Enable log persistence for production
+persistence:
+  enabled: true
+  storageClass: ""  # Use default storage class
+  size: 5Gi
+
+# Pod disruption budget for HA
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Node affinity for production nodes
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: node-type
+              operator: In
+              values:
+                - production

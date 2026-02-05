@@ -1,0 +1,827 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:dita="http://dita.oasis-open.org/architecture/2005/"
+           xmlns:diwoo="https://standaarden.overheid.nl/diwoo/metadata/"
+           xmlns:mdto="https://www.nationaalarchief.nl/mdto"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified"
+           targetNamespace="https://standaarden.overheid.nl/diwoo/metadata/"
+           version="0.9.8">
+   <xs:annotation>
+      <xs:documentation>
+         <dita:div xmlns:dita="http://dita.oasis-open.org/architecture/2005/">
+            <dita:p>DiWoo-metadata.xsd</dita:p>
+            <dita:p>XSD voor extensie van sitemaps ten behoeve van de Digitale infrastructuur voor de Wet
+          open overheid</dita:p>
+            <dita:p>Versie 0.9.8</dita:p>
+         </dita:div>
+      </xs:documentation>
+   </xs:annotation>
+   <!-- 
+    ==================================================================
+    == XML-schema voor MDTO                                       ====
+    == https://www.nationaalarchief.nl/archiveren/mdto/xml-schema ====    
+    ==================================================================
+  -->
+   <xs:import namespace="https://www.nationaalarchief.nl/mdto"
+              schemaLocation="https://www.nationaalarchief.nl/mdto/MDTO-XML1.0.1.xsd"/>
+   <!-- 
+    =====================================
+    == schema voor de waardelijsten  ====
+    =====================================
+  -->
+   <xs:include schemaLocation="diwoo-metadata-lijsten.xsd"/>
+   <!-- 
+    =====================================
+    == elementdeclaraties            ====
+    =====================================
+  -->
+   <xs:element name="Document" type="diwoo:DocumentType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_Document.html"/>
+      </xs:annotation>
+   </xs:element>
+   <!-- 
+    =====================================
+    == complex types                 ====
+    =====================================
+  -->
+   <xs:complexType name="DocumentType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_DocumentType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element name="DiWoo" minOccurs="1" maxOccurs="1" type="diwoo:DiWooType">
+               <xs:annotation>
+                  <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_DiWoo.html"/>
+               </xs:annotation>
+            </xs:element>
+            <xs:element ref="mdto:MDTO" minOccurs="1" maxOccurs="unbounded"/>
+         </xs:choice>
+         <xs:element name="extraMetadata"
+                     minOccurs="0"
+                     maxOccurs="unbounded"
+                     type="diwoo:extraMetadataType">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_extraMetadata.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="DiWooType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_DiWooType.html"/>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="identifiers"
+                     type="diwoo:identifiersType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_identifiers.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="publisher"
+                     type="diwoo:organisatieType"
+                     minOccurs="1"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_publisher.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="verantwoordelijke"
+                     type="diwoo:organisatieType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_verantwoordelijke.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="medeverantwoordelijken"
+                     type="diwoo:medeverantwoordelijkenType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_medeverantwoordelijken.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="opsteller"
+                     type="diwoo:organisatieType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_opsteller.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="naamOpsteller"
+                     type="xs:string"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_naamOpsteller.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="titelcollectie"
+                     type="diwoo:titelcollectieType"
+                     maxOccurs="1"
+                     minOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_titelcollectie.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="omschrijvingen"
+                     type="diwoo:omschrijvingenType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_omschrijvingen.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="classificatiecollectie"
+                     type="diwoo:classificatiecollectieType"
+                     maxOccurs="1"
+                     minOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_classificatiecollectie.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="creatiedatum" type="xs:date" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_creatiedatum.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="geldigheid"
+                     type="diwoo:geldigheidType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_geldigheid.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="language"
+                     type="diwoo:languageType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_language.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="format"
+                     type="diwoo:formatType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_format.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="aggregatiekenmerk"
+                     type="xs:string"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_aggregatiekenmerk.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="isPartOf"
+                     type="diwoo:documentverwijzingType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_isPartOf.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="hasParts"
+                     type="diwoo:hasPartsType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_hasParts.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="documenthandelingen"
+                     type="diwoo:documenthandelingenType"
+                     maxOccurs="1"
+                     minOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_documenthandelingen.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="documentrelaties"
+                     type="diwoo:documentrelatiesType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_documentrelaties.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="redenVerwijderingVervanging"
+                     type="diwoo:redenVerwijderingVervangingType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_redenVerwijderingVervanging.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="identifiersType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_identifiersType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="identifier"
+                     maxOccurs="unbounded"
+                     minOccurs="1"
+                     type="xs:string">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_identifier.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="medeverantwoordelijkenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_medeverantwoordelijkenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="medeverantwoordelijke"
+                     type="diwoo:organisatieType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_medeverantwoordelijke.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="titelcollectieType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_titelcollectieType.html"/>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="officieleTitel"
+                     type="xs:string"
+                     maxOccurs="1"
+                     minOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_officieleTitel.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="verkorteTitels"
+                     type="diwoo:verkorteTitelsType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_verkorteTitels.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="alternatieveTitels"
+                     type="diwoo:alternatieveTitelsType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_alternatieveTitels.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="verkorteTitelsType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_verkorteTitelsType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="verkorteTitel"
+                     type="xs:string"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_verkorteTitel.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="alternatieveTitelsType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_alternatieveTitelsType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="alternatieveTitel"
+                     type="xs:string"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_alternatieveTitel.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="omschrijvingenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_omschrijvingenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="omschrijving"
+                     type="xs:string"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_omschrijving.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="classificatiecollectieType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_classificatiecollectieType.html"/>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="informatiecategorieen"
+                     type="diwoo:informatiecategorieenType"
+                     minOccurs="1"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_informatiecategorieen.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="documentsoorten"
+                     type="diwoo:documentsoortenType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_documentsoorten.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="themas"
+                     type="diwoo:themasType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_themas.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="trefwoorden"
+                     type="diwoo:trefwoordenType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_trefwoorden.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="informatiecategorieenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_informatiecategorieenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="informatiecategorie"
+                     type="diwoo:informatiecategorieType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_informatiecategorie.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="informatiecategorieType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_informatiecategorieType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor de informatiecategorie</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:informatiecategorielijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="documentsoortenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documentsoortenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="documentsoort"
+                     type="diwoo:documentsoortType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_documentsoort.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="documentsoortType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documentsoortType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor de documentsoort</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:documentsoortlijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="themasType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_themasType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="thema"
+                     type="diwoo:themaType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_thema.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="themaType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_themaType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor het thema</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:themalijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="trefwoordenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_trefwoordenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="trefwoord"
+                     type="xs:string"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_trefwoord.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="geldigheidType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_geldigheidType.html"/>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="begindatum"
+                     type="xs:dateTime"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_begindatum.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="einddatum" type="xs:dateTime" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_einddatum.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="languageType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_languageType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor de taal</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:taallijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="formatType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_formatType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor het formaat</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:formatlijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="hasPartsType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_hasPartsType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="hasPart"
+                     type="diwoo:documentverwijzingType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_hasPart.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="documenthandelingenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documenthandelingenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="documenthandeling"
+                     type="diwoo:documenthandelingType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_documenthandeling.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="documenthandelingType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documenthandelingType.html"/>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="soortHandeling"
+                     type="diwoo:soortHandelingType"
+                     minOccurs="1"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_soortHandeling.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="atTime" type="xs:dateTime" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_atTime.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="wasAssociatedWith"
+                     type="diwoo:organisatieType"
+                     minOccurs="0"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_wasAssociatedWith.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="soortHandelingType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_soortHandelingType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor de soort handeling</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:soorthandelinglijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="documentrelatiesType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documentrelatiesType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="documentrelatie"
+                     type="diwoo:documentrelatieType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_documentrelatie.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="documentrelatieType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documentrelatieType.html"/>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="role" type="diwoo:roleType" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_role.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="relation"
+                     type="diwoo:documentverwijzingType"
+                     minOccurs="1"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_relation.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+   <xs:complexType name="roleType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_roleType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor de rol van het gerelateerde document</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:documentrelatielijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="redenVerwijderingVervangingType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_redenVerwijderingVervangingType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:annotation>
+                  <xs:documentation>de URI voor de reden van verwijdering of vervanging</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:redenverwijderingvervanginglijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="extraMetadataType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_extraMetadataType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:sequence minOccurs="0" maxOccurs="1">
+            <xs:element name="namespace" type="xs:anyURI" minOccurs="1" maxOccurs="1">
+               <xs:annotation>
+                  <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_namespace.html"/>
+               </xs:annotation>
+            </xs:element>
+            <xs:element name="prefix" type="xs:string">
+               <xs:annotation>
+                  <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_prefix.html"/>
+               </xs:annotation>
+            </xs:element>
+         </xs:sequence>
+         <xs:element name="extraMetadatavelden" type="diwoo:extraMetadataveldenType">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_extraMetadatavelden.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="extraMetadataveldenType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_extraMetadataveldenType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="extraMetadataveld"
+                     type="diwoo:extraMetadataveldType"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_extraMetadataveld.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="extraMetadataveldType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_extraMetadataveldType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="key" type="xs:string" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_key.html"/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="values"
+                     type="diwoo:valuesType"
+                     minOccurs="1"
+                     maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_values.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="valuesType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_valuesType.html"/>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element name="value"
+                     type="xs:string"
+                     minOccurs="1"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Element_diwoo_value.html"/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <!-- 
+    =====================================
+    == generieke types               ====
+    =====================================
+  -->
+   <xs:complexType name="organisatieType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_organisatieType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:organisatielijst"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <xs:complexType name="documentverwijzingType">
+      <xs:annotation>
+         <xs:documentation source="https://standaarden.overheid.nl/diwoo/0.9.8/doc/diwoo_xsd_Complex_Type_diwoo_documentverwijzingType.html"/>
+      </xs:annotation>
+      <xs:simpleContent>
+         <xs:extension base="diwoo:label">
+            <xs:attribute name="resource">
+               <xs:simpleType>
+                  <xs:restriction base="diwoo:geidentificeerdDocument"/>
+               </xs:simpleType>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+   <!-- 
+    =====================================
+    == simple types                  ====
+    =====================================
+  -->
+   <xs:simpleType name="label">
+      <xs:restriction base="xs:string"/>
+   </xs:simpleType>
+   <xs:simpleType name="organisatielijst">
+      <xs:union>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:collijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:gemeentelijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:ministerielijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:provincielijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:oorglijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:solijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:waterschapslijst"/>
+         </xs:simpleType>
+         <xs:simpleType>
+            <xs:restriction base="diwoo:zbolijst"/>
+         </xs:simpleType>
+      </xs:union>
+   </xs:simpleType>
+   <xs:simpleType name="geidentificeerdDocument">
+      <xs:restriction base="xs:string"/>
+   </xs:simpleType>
+</xs:schema>

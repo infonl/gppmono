@@ -1,0 +1,42 @@
+[
+  {
+    "model": "accounts.organisationunit",
+    "pk": 1,
+    "fields": {
+      "identifier": "local-dev-group",
+      "naam": "Local Development Group"
+    }
+  },
+  {
+    "model": "accounts.organisationunit",
+    "pk": 2,
+    "fields": {
+      "identifier": "test-editors",
+      "naam": "Test Editors Group"
+    }
+  },
+  {
+    "model": "accounts.organisationunit",
+    "pk": 3,
+    "fields": {
+      "identifier": "test-publishers",
+      "naam": "Test Publishers Group"
+    }
+  },
+  {
+    "model": "accounts.organisationmember",
+    "pk": 1,
+    "fields": {
+      "identifier": "local-dev",
+      "naam": "Local Developer"
+    }
+  },
+  {
+    "model": "accounts.organisationmember",
+    "pk": 2,
+    "fields": {
+      "identifier": "test-editor",
+      "naam": "Test Editor"
+    }
+  }
+]

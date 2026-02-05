@@ -1,0 +1,346 @@
+# =============================================================================
+# GPP Monorepo - Combined .gitignore
+# =============================================================================
+
+# =============================================================================
+# ENVIRONMENT & SECRETS
+# =============================================================================
+# Root level
+.env
+.envrc
+
+# Service-level env files (for local dev outside Docker)
+services/**/.env
+services/**/.env.local
+services/**/secrets.env
+
+# Python local settings
+local.py
+local_settings.py
+
+# Deployment secrets
+deploy/local/secrets.env
+
+# =============================================================================
+# MACOS
+# =============================================================================
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# =============================================================================
+# EDITORS & IDES
+# =============================================================================
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (PyCharm, WebStorm, Rider, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.iml
+
+# Vim/Neovim
+*.sw?
+*~
+.netrwhist
+
+# Cursor
+.cursorignore
+.cursorindexingignore
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+__pycache__/
+*.py[codz]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+.installed.cfg
+MANIFEST
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+cover/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# Ruff
+.ruff_cache/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# UV / PDM / Pixi
+.pdm-python
+.pdm-build/
+.pixi
+
+# Translations
+*.mo
+*.pot
+
+# Sphinx docs
+docs/_build/
+
+# PyPI
+.pypirc
+
+# Install sentinels
+.install-sentinel
+
+# =============================================================================
+# NODE.JS / JAVASCRIPT
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+
+# Build output
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Testing
+/cypress/videos/
+/cypress/screenshots/
+coverage/
+
+# =============================================================================
+# .NET / C#
+# =============================================================================
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+# User-specific files
+*.rsuser
+*.userprefs
+mono_crash.*
+
+# Visual Studio generated files
+Generated\ Files/
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.tlog
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+*.e2e
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Coverlet
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Code Coverage
+*.coverage
+*.coveragexml
+*.dotCover
+
+# Local History
+.localhistory/
+.vshistory/
+.history/
+
+# MSBuild
+*.binlog
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+# Don't ignore docker-compose files, but ignore docker env overrides
+docker-compose.*.local.yml
+
+# =============================================================================
+# LOGS & DATA
+# =============================================================================
+*.log
+/log/
+logs/
+/mail/
+/media/
+/static/
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+*.db
+*.sqlite3
+*.sqlite3-journal
+*.mdf
+*.ldf
+*.ndf
+
+# =============================================================================
+# GENERATED FILES
+# =============================================================================
+/docs/_build/
+/docs/developers/_assets/db_schema.*
+/reports/
+
+# Service-specific generated files
+services/publicatiebank/src/woo_publications/static/bundles/
+services/publicatiebank/src/woo_publications/fonts/
+services/woo-hoo/data/samples/*.metadata.json
+
+# =============================================================================
+# MISC
+# =============================================================================
+*.bak
+*.backup
+*.orig
+*.rej
+*.swp
+*~
+.sass-cache/

@@ -1,0 +1,28 @@
+# Local Development Overrides
+# This file is automatically loaded by docker compose
+# Use for local-specific settings that shouldn't be committed
+
+services:
+  # Expose postgres on a non-standard port to avoid conflicts
+  # postgres:
+  #   ports:
+  #     - "5434:5432"
+
+  # Enable hot reload for woo-hoo development
+  # woo-hoo:
+  #   build:
+  #     context: ./services/woo-hoo
+  #     dockerfile: Dockerfile
+  #     target: development
+  #   command: ["uvicorn", "woo_hoo.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+  #   volumes:
+  #     - ./services/woo-hoo/src:/app/src:ro
+
+  # For GPP-app development with Vue hot reload, run the frontend separately:
+  # 1. Start dependencies: just up-deps
+  # 2. Run Vue dev server: just dev-frontend
+  # 3. The Vue dev server proxies API calls to the backend
+  gpp-app:
+    # Add extra hosts for easier debugging
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
