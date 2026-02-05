@@ -1,0 +1,148 @@
+# gpp-app Service - Development Commands
+# Run 'just' or 'just --list' to see available commands
+
+# Default recipe: show help
+default:
+    @just --list --unsorted
+
+# =============================================================================
+# SETUP
+# =============================================================================
+
+# Install frontend dependencies
+install-frontend:
+    cd odpc.client && npm install
+
+# Alias for install-frontend
+install: install-frontend
+
+# =============================================================================
+# DEVELOPMENT
+# =============================================================================
+
+# Run frontend dev server with hot reload
+dev: install-frontend
+    cd odpc.client && npm run dev
+
+# Run .NET backend locally (requires dotnet SDK)
+dev-backend:
+    cd ODPC.Server && dotnet run --launch-profile http
+
+# Run both frontend and backend (open separate terminals)
+dev-full:
+    @echo "Start these in separate terminals:"
+    @echo "  just dev          # Frontend with hot reload"
+    @echo "  just dev-backend  # .NET backend"
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
+# Run all tests (frontend + backend)
+test: test-frontend test-backend
+
+# Run frontend unit tests (Vitest)
+test-frontend:
+    cd odpc.client && npm install && npx vitest run
+
+# Run frontend tests in watch mode
+test-frontend-watch:
+    cd odpc.client && npm install && npx vitest
+
+# Run .NET backend tests
+test-backend:
+    dotnet test ODPC.Test
+
+# Run specific test class or method
+test-backend-filter FILTER:
+    dotnet test ODPC.Test --filter "{{FILTER}}"
+
+# =============================================================================
+# BUILD
+# =============================================================================
+
+# Build frontend and backend
+build: build-frontend build-backend
+
+# Build frontend for production
+build-frontend: install-frontend
+    cd odpc.client && npm run build
+
+# Build .NET backend
+build-backend:
+    dotnet build ODPC.sln
+
+# Build for release
+build-release:
+    dotnet build ODPC.sln -c Release
+
+# =============================================================================
+# CODE QUALITY
+# =============================================================================
+
+# Lint all code (frontend + backend)
+lint: lint-frontend lint-backend
+
+# Lint frontend code (ESLint + Biome)
+lint-frontend:
+    cd odpc.client && npm run lint
+
+# Lint backend code (dotnet format)
+lint-backend:
+    dotnet format ODPC.sln --verify-no-changes
+
+# Format all code
+format: format-frontend format-backend
+
+# Format frontend code
+format-frontend:
+    cd odpc.client && npm run format
+
+# Format backend code
+format-backend:
+    dotnet format ODPC.sln
+
+# Type check frontend
+typecheck-frontend:
+    cd odpc.client && npx vue-tsc --noEmit
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+
+# Start full stack via Docker Compose (local docker-compose.yml)
+up:
+    docker compose up
+
+# Start dependencies only (db, redis, openzaak, odrc)
+up-deps:
+    docker compose up postgres-db redis openzaak-web openzaak-celery odrc
+
+# Build Docker image
+docker-build:
+    docker compose build
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+
+# Run EF Core migrations
+migrate:
+    dotnet ef database update --project ODPC.Server
+
+# Add a new migration
+migrate-add NAME:
+    dotnet ef migrations add {{NAME}} --project ODPC.Server
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+# Remove build artifacts
+clean:
+    cd odpc.client && rm -rf dist node_modules/.vite
+    dotnet clean ODPC.sln
+
+# Deep clean (including node_modules)
+clean-all: clean
+    cd odpc.client && rm -rf node_modules

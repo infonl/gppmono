@@ -439,6 +439,305 @@ class TestGenerateFromPublicatiebankEndpoint:
         assert data["suggestion"]["metadata"]["titelcollectie"]["officieleTitel"] == "Test Document from Publicatiebank"
 
 
+# Tests for multi-file publication metadata generation endpoint
+
+
+@pytest.mark.asyncio
+async def test_generate_for_publication_no_files(async_client: AsyncClient):
+    """Should return error when no files are provided."""
+    response = await async_client.post(
+        "/api/v1/metadata/generate-for-publication",
+        files=[],
+    )
+
+    # FastAPI returns 422 for missing required files
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_generate_for_publication_invalid_model(async_client: AsyncClient):
+    """Should return error for invalid model format."""
+    files = [("files", ("test.txt", b"Test content " * 100, "text/plain"))]
+
+    response = await async_client.post(
+        "/api/v1/metadata/generate-for-publication",
+        files=files,
+        data={"model": "invalid-model-format"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is False
+    assert "Invalid model ID format" in data["error"]
+
+
+@pytest.mark.asyncio
+async def test_generate_for_publication_with_mock(async_client: AsyncClient):
+    """Test successful multi-file generation with mocked LLM response."""
+    from woo_hoo.services.openrouter import ChatCompletionChoice, ChatCompletionResponse, ChatMessage
+
+    mock_xml_response = """<?xml version="1.0" encoding="UTF-8"?>
+<diwoo:Document xmlns:diwoo="https://standaarden.overheid.nl/diwoo/metadata/">
+  <diwoo:DiWoo>
+    <diwoo:identifiers>
+      <diwoo:identifier>PUB-2024-001</diwoo:identifier>
+    </diwoo:identifiers>
+    <diwoo:publisher resource="https://identifier.overheid.nl/tooi/id/gemeente/gm0363">Test Publisher</diwoo:publisher>
+    <diwoo:titelcollectie>
+      <diwoo:officieleTitel>Publication Test Document</diwoo:officieleTitel>
+    </diwoo:titelcollectie>
+    <diwoo:classificatiecollectie>
+      <diwoo:informatiecategorieen>
+        <diwoo:informatiecategorie resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_5ba23c01">Adviezen</diwoo:informatiecategorie>
+      </diwoo:informatiecategorieen>
+      <diwoo:trefwoorden>
+        <diwoo:trefwoord>test</diwoo:trefwoord>
+        <diwoo:trefwoord>publication</diwoo:trefwoord>
+      </diwoo:trefwoorden>
+    </diwoo:classificatiecollectie>
+    <diwoo:documenthandelingen>
+      <diwoo:documenthandeling>
+        <diwoo:soortHandeling resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_vaststelling">vaststelling</diwoo:soortHandeling>
+        <diwoo:atTime>2024-01-15T10:00:00</diwoo:atTime>
+      </diwoo:documenthandeling>
+    </diwoo:documenthandelingen>
+  </diwoo:DiWoo>
+</diwoo:Document>"""
+
+    mock_llm_response = ChatCompletionResponse(
+        id="test-id",
+        model="mistralai/mistral-large-2411",
+        choices=[
+            ChatCompletionChoice(
+                index=0,
+                message=ChatMessage(role="assistant", content=mock_xml_response),
+                finish_reason="stop",
+            )
+        ],
+    )
+
+    files = [
+        ("files", ("doc1.txt", b"First document content " * 50, "text/plain")),
+        ("files", ("doc2.txt", b"Second document content " * 50, "text/plain")),
+    ]
+
+    with patch("woo_hoo.services.metadata_generator.MetadataGenerator._get_client") as mock_get_llm:
+        mock_llm_client = AsyncMock()
+        mock_llm_client.chat_completion = AsyncMock(return_value=mock_llm_response)
+        mock_get_llm.return_value = mock_llm_client
+
+        response = await async_client.post(
+            "/api/v1/metadata/generate-for-publication",
+            files=files,
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["documents_processed"] == 2
+    assert data["documents_failed"] == 0
+    assert "suggestion" in data
+    assert data["suggestion"]["publication_metadata"]["titelcollectie"]["officieleTitel"] == "Publication Test Document"
+    assert "overall_confidence" in data["suggestion"]
+    assert len(data["suggestion"]["document_suggestions"]) == 2
+    assert "aggregated_keywords" in data["suggestion"]
+
+
+# Tests for publication UUID-based metadata generation endpoint
+
+
+@pytest.mark.asyncio
+async def test_generate_from_publication_publicatiebank_not_configured(async_client: AsyncClient):
+    """Should return error when publicatiebank is not configured."""
+    response = await async_client.post(
+        "/api/v1/metadata/generate-from-publication/550e8400-e29b-41d4-a716-446655440000",
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is False
+    assert "GPP_PUBLICATIEBANK_URL" in data["error"]
+
+
+@pytest.mark.asyncio
+async def test_generate_from_publication_not_found(async_client: AsyncClient):
+    """Should return error when publication is not found."""
+    from woo_hoo.services.publicatiebank_client import PublicationNotFoundError
+
+    with patch("woo_hoo.api.routers.metadata.PublicatiebankClient") as MockClient:
+        mock_instance = AsyncMock()
+        mock_instance.is_configured = True
+        mock_instance.get_publication_with_documents = AsyncMock(
+            side_effect=PublicationNotFoundError("Publication not found")
+        )
+        mock_instance.close = AsyncMock()
+        MockClient.return_value = mock_instance
+
+        response = await async_client.post(
+            "/api/v1/metadata/generate-from-publication/550e8400-e29b-41d4-a716-446655440000",
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is False
+    assert "not found" in data["error"].lower()
+
+
+@pytest.mark.asyncio
+async def test_generate_from_publication_no_documents(async_client: AsyncClient):
+    """Should return error when publication has no documents."""
+    from woo_hoo.services.publicatiebank_client import PublicatiebankPublication
+
+    mock_publication = PublicatiebankPublication(
+        uuid="550e8400-e29b-41d4-a716-446655440000",
+        officiele_titel="Test Publication",
+        verkorte_titel="Test",
+        omschrijving="A test publication",
+        publicatiestatus="concept",
+        publisher="Test Publisher",
+        informatie_categorieen=["adviezen"],
+        onderwerpen=[],
+        kenmerken=[],
+        documents=[],
+    )
+
+    with patch("woo_hoo.api.routers.metadata.PublicatiebankClient") as MockClient:
+        mock_instance = AsyncMock()
+        mock_instance.is_configured = True
+        mock_instance.get_publication_with_documents = AsyncMock(return_value=mock_publication)
+        mock_instance.close = AsyncMock()
+        MockClient.return_value = mock_instance
+
+        response = await async_client.post(
+            "/api/v1/metadata/generate-from-publication/550e8400-e29b-41d4-a716-446655440000",
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is False
+    assert "no downloadable documents" in data["error"].lower()
+
+
+@pytest.mark.asyncio
+async def test_generate_from_publication_with_mock(async_client: AsyncClient):
+    """Test successful generation from publication with mocked responses."""
+    from woo_hoo.services.openrouter import ChatCompletionChoice, ChatCompletionResponse, ChatMessage
+    from woo_hoo.services.publicatiebank_client import PublicatiebankDocument, PublicatiebankPublication
+
+    mock_documents = [
+        PublicatiebankDocument(
+            uuid="doc-uuid-1",
+            officiele_titel="Document 1",
+            verkorte_titel="Doc 1",
+            omschrijving="First document",
+            bestandsnaam="doc1.txt",
+            bestandsformaat="text/plain",
+            bestandsomvang=1024,
+            publicatiestatus="published",
+            content=b"Document one content " * 50,
+            kenmerken=[],
+        ),
+        PublicatiebankDocument(
+            uuid="doc-uuid-2",
+            officiele_titel="Document 2",
+            verkorte_titel="Doc 2",
+            omschrijving="Second document",
+            bestandsnaam="doc2.txt",
+            bestandsformaat="text/plain",
+            bestandsomvang=1024,
+            publicatiestatus="published",
+            content=b"Document two content " * 50,
+            kenmerken=[],
+        ),
+    ]
+
+    mock_publication = PublicatiebankPublication(
+        uuid="550e8400-e29b-41d4-a716-446655440000",
+        officiele_titel="Test Publication",
+        verkorte_titel="Test",
+        omschrijving="A test publication with documents",
+        publicatiestatus="concept",
+        publisher="Test Publisher",
+        informatie_categorieen=["adviezen"],
+        onderwerpen=[],
+        kenmerken=[],
+        documents=mock_documents,
+    )
+
+    mock_xml_response = """<?xml version="1.0" encoding="UTF-8"?>
+<diwoo:Document xmlns:diwoo="https://standaarden.overheid.nl/diwoo/metadata/">
+  <diwoo:DiWoo>
+    <diwoo:identifiers>
+      <diwoo:identifier>PUB-2024-001</diwoo:identifier>
+    </diwoo:identifiers>
+    <diwoo:publisher resource="https://identifier.overheid.nl/tooi/id/gemeente/gm0363">Test Publisher</diwoo:publisher>
+    <diwoo:titelcollectie>
+      <diwoo:officieleTitel>Generated Publication Title</diwoo:officieleTitel>
+    </diwoo:titelcollectie>
+    <diwoo:classificatiecollectie>
+      <diwoo:informatiecategorieen>
+        <diwoo:informatiecategorie resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_5ba23c01">Adviezen</diwoo:informatiecategorie>
+      </diwoo:informatiecategorieen>
+      <diwoo:trefwoorden>
+        <diwoo:trefwoord>generated</diwoo:trefwoord>
+        <diwoo:trefwoord>metadata</diwoo:trefwoord>
+      </diwoo:trefwoorden>
+    </diwoo:classificatiecollectie>
+    <diwoo:documenthandelingen>
+      <diwoo:documenthandeling>
+        <diwoo:soortHandeling resource="https://identifier.overheid.nl/tooi/def/thes/kern/c_vaststelling">vaststelling</diwoo:soortHandeling>
+        <diwoo:atTime>2024-01-15T10:00:00</diwoo:atTime>
+      </diwoo:documenthandeling>
+    </diwoo:documenthandelingen>
+  </diwoo:DiWoo>
+</diwoo:Document>"""
+
+    mock_llm_response = ChatCompletionResponse(
+        id="test-id",
+        model="mistralai/mistral-large-2411",
+        choices=[
+            ChatCompletionChoice(
+                index=0,
+                message=ChatMessage(role="assistant", content=mock_xml_response),
+                finish_reason="stop",
+            )
+        ],
+    )
+
+    with (
+        patch("woo_hoo.api.routers.metadata.PublicatiebankClient") as MockPubClient,
+        patch("woo_hoo.services.metadata_generator.MetadataGenerator._get_client") as mock_get_llm,
+    ):
+        mock_pub_instance = AsyncMock()
+        mock_pub_instance.is_configured = True
+        mock_pub_instance.get_publication_with_documents = AsyncMock(return_value=mock_publication)
+        mock_pub_instance.close = AsyncMock()
+        MockPubClient.return_value = mock_pub_instance
+
+        mock_llm_client = AsyncMock()
+        mock_llm_client.chat_completion = AsyncMock(return_value=mock_llm_response)
+        mock_get_llm.return_value = mock_llm_client
+
+        response = await async_client.post(
+            "/api/v1/metadata/generate-from-publication/550e8400-e29b-41d4-a716-446655440000",
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["documents_processed"] == 2
+    assert data["documents_failed"] == 0
+    assert "suggestion" in data
+    assert data["suggestion"]["publication_metadata"]["titelcollectie"]["officieleTitel"] == "Generated Publication Title"
+    assert "overall_confidence" in data["suggestion"]
+    assert data["suggestion"]["overall_confidence"]["overall"] > 0
+    assert len(data["suggestion"]["document_suggestions"]) == 2
+    # Verify document UUIDs are preserved
+    doc_uuids = [doc["document_uuid"] for doc in data["suggestion"]["document_suggestions"]]
+    assert "doc-uuid-1" in doc_uuids
+    assert "doc-uuid-2" in doc_uuids
+
+
 class TestOpenAPISchema:
     """Tests for OpenAPI schema availability."""
 

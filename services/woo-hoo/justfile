@@ -1,0 +1,127 @@
+# woo-hoo Service - Development Commands
+# Run 'just' or 'just --list' to see available commands
+
+# Default recipe: show help
+default:
+    @just --list --unsorted
+
+# =============================================================================
+# DEVELOPMENT
+# =============================================================================
+
+# Install dependencies (including dev dependencies)
+install:
+    uv sync --extra dev
+
+# Start development server with hot reload
+dev:
+    uv run uvicorn woo_hoo.main:app --host 0.0.0.0 --port 8003 --reload
+
+# Run linter
+lint:
+    uv run ruff check src tests
+
+# Format code
+format:
+    uv run ruff format src tests
+    uv run ruff check --fix src tests
+
+# Run type checker
+typecheck:
+    uv run pyrefly check src
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
+# Run all tests
+test:
+    uv run pytest tests -v
+
+# Run unit tests only
+test-unit:
+    uv run pytest tests/unit -v
+
+# Run integration tests only
+test-integration:
+    uv run pytest tests/integration -v
+
+# Run tests with coverage
+test-cov:
+    uv run pytest tests --cov=woo_hoo --cov-report=term-missing --cov-report=html
+
+# Run a specific test by pattern
+test-k pattern:
+    uv run pytest tests -v -k "{{pattern}}"
+
+# =============================================================================
+# CLI SHORTCUTS
+# =============================================================================
+
+# List Woo categories
+categories:
+    uv run woo-hoo categories
+
+# Generate metadata from file
+generate FILE:
+    uv run woo-hoo generate {{FILE}}
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+
+# Build Docker image
+docker-build:
+    docker build -t woo-hoo:latest .
+
+# Run in Docker
+docker-run: docker-build
+    docker run -p 8003:8000 --env-file .env woo-hoo:latest
+
+# Run tests in Docker
+docker-test: docker-build
+    docker build --target test -t woo-hoo:test .
+    docker run woo-hoo:test
+
+# =============================================================================
+# REAL API TESTING (requires OPENROUTER_API_KEY)
+# =============================================================================
+
+# Download sample PDFs from open.overheid.nl
+download-samples:
+    uv run python scripts/download_samples.py
+
+# Test all samples (XML mode - default)
+test-real:
+    uv run python scripts/test_e2e.py --all
+
+# Test all samples with verbose output
+test-real-verbose:
+    uv run python scripts/test_e2e.py --all --verbose
+
+# Test single file (default: woo_besluit)
+test-real-single FILE="data/samples/woo_besluit_landsadvocaat_stikstof.pdf":
+    uv run python scripts/test_e2e.py --file {{FILE}} --verbose
+
+# Full API e2e test via FastAPI endpoints
+test-api FILE="":
+    #!/usr/bin/env bash
+    if [ -n "{{FILE}}" ]; then
+        uv run python scripts/test_api_e2e.py --file {{FILE}}
+    else
+        uv run python scripts/test_api_e2e.py
+    fi
+
+# List available models via API
+test-api-models:
+    uv run python scripts/test_api_e2e.py --list-models
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+# Remove build artifacts
+clean:
+    rm -rf .pytest_cache .ruff_cache .coverage htmlcov dist build *.egg-info .install-sentinel
+    find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find . -type f -name "*.pyc" -delete 2>/dev/null || true

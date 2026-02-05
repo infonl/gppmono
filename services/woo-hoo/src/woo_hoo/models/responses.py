@@ -128,3 +128,53 @@ class ModelsResponse(BaseModel):
         default="Any valid OpenRouter model ID can be used via the 'model' parameter.",
         description="Usage note",
     )
+
+
+class DocumentMetadataSuggestion(BaseModel):
+    """Generated metadata suggestion for a single document."""
+
+    document_uuid: str | None = Field(default=None, description="UUID of the document (if from publicatiebank)")
+    document_filename: str = Field(..., description="Filename of the document")
+    metadata: DiWooMetadata = Field(..., description="Generated DIWOO-compliant metadata")
+    confidence: ConfidenceScores = Field(..., description="Confidence scores for the suggestion")
+
+
+class PublicationMetadataSuggestion(BaseModel):
+    """Aggregated metadata suggestion for a publication.
+
+    Combines metadata from all documents with intelligent merging:
+    - Publication-level fields from the first/main document
+    - Keywords/themes aggregated from all documents
+    """
+
+    publication_metadata: DiWooMetadata = Field(
+        ..., description="Aggregated metadata for the publication"
+    )
+    overall_confidence: ConfidenceScores = Field(
+        ..., description="Overall confidence scores (averaged from all documents)"
+    )
+    document_suggestions: list[DocumentMetadataSuggestion] = Field(
+        default_factory=list, description="Per-document metadata suggestions"
+    )
+    aggregated_keywords: list[str] = Field(
+        default_factory=list, description="Keywords aggregated from all documents"
+    )
+    model_used: str = Field(..., description="LLM model that generated this suggestion")
+    processing_time_ms: int = Field(..., description="Total processing time in milliseconds")
+
+
+class PublicationMetadataGenerationResponse(BaseModel):
+    """Response from publication-level metadata generation endpoint."""
+
+    success: bool = Field(..., description="Whether generation succeeded")
+    request_id: str = Field(..., description="Unique request identifier")
+    suggestion: PublicationMetadataSuggestion | None = Field(
+        default=None,
+        description="Generated publication metadata suggestion (present if success=true)",
+    )
+    documents_processed: int = Field(default=0, description="Number of documents successfully processed")
+    documents_failed: int = Field(default=0, description="Number of documents that failed processing")
+    error: str | None = Field(
+        default=None,
+        description="Error message (present if success=false)",
+    )

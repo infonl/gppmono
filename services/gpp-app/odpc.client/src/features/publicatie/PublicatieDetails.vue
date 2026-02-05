@@ -60,19 +60,15 @@
       />
     </section>
 
-    <!-- Document selection for metadata generation -->
-    <div
-      v-if="isAvailable && existingDocuments.length > 1 && !isReadonly && !hasError"
-      class="document-selector"
-    >
-      <label for="generate-document-select">Document voor AI metadata generatie</label>
-      <select id="generate-document-select" v-model="selectedDocumentUuid">
-        <option value="">-- Selecteer een document --</option>
-        <option v-for="doc in existingDocuments" :key="doc.uuid" :value="doc.uuid">
-          {{ doc.bestandsnaam }}
-        </option>
-      </select>
-    </div>
+    <!-- Metadata Preview Modal -->
+    <metadata-preview-modal
+      :is-revealed="showMetadataPreview"
+      :is-loading="isGenerating"
+      :error="metadataError"
+      :data="metadataPreviewData"
+      @close="handleMetadataPreviewClose"
+      @confirm="handleMetadataPreviewConfirm"
+    />
 
     <div class="form-submit">
       <menu class="reset">
@@ -100,9 +96,9 @@
           <li v-if="isAvailable && existingDocuments.length">
             <button
               type="button"
-              title="Genereer metadata met AI"
+              title="Genereer metadata met AI voor alle documenten"
               class="button secondary"
-              :disabled="!selectedDocumentUuid || isGenerating"
+              :disabled="isGenerating"
               @click="handleGenerateMetadata"
             >
               {{ isGenerating ? "Bezig..." : "Genereer metadata" }}
@@ -192,6 +188,7 @@ import DraftDialogContent from "./components/dialogs/DraftDialogContent.vue";
 import DeleteDialogContent from "./components/dialogs/DeleteDialogContent.vue";
 import RetractDialogContent from "./components/dialogs/RetractDialogContent.vue";
 import NoDocumentsDialogContent from "./components/dialogs/NoDocumentsDialogContent.vue";
+import MetadataPreviewModal from "./components/MetadataPreviewModal.vue";
 import { usePublicatie } from "./composables/use-publicatie";
 import { useDocumenten } from "./composables/use-documenten";
 import { useMijnGebruikersgroepen } from "./composables/use-mijn-gebruikersgroepen";
@@ -206,7 +203,18 @@ const props = defineProps<{ uuid?: string }>();
 const { previousRoute } = usePreviousRoute();
 
 const { deleteDialog, draftDialog, retractDialog, noDocumentsDialog } = useDialogs();
-const { isGenerating, isAvailable, checkAvailability, generateMetadata } = useGenerateMetadata();
+const {
+	isGenerating,
+	isAvailable,
+	checkAvailability,
+	generateMetadataPreview,
+	applyMetadataSuggestions
+} = useGenerateMetadata();
+
+// Metadata preview state
+const showMetadataPreview = ref(false);
+const metadataPreviewData = ref<import("./components/MetadataPreviewModal.vue").MetadataPreviewData | null>(null);
+const metadataError = ref<string | null>(null);
 
 onMounted(checkAvailability);
 
@@ -359,39 +367,53 @@ watch(
 // Metadata generation
 const existingDocuments = computed(() => documenten.value.filter((doc) => doc.uuid));
 
-const selectedDocumentUuid = ref(
-  existingDocuments.value.length ? existingDocuments.value[0].uuid : undefined
-);
-
-watch(existingDocuments, (docs) => {
-  if (!selectedDocumentUuid.value && docs.length) {
-    selectedDocumentUuid.value = docs[0].uuid;
-  }
-});
-
 const handleGenerateMetadata = async () => {
-  if (!selectedDocumentUuid.value) return;
+	if (!existingDocuments.value.length) return;
 
-  const result = await generateMetadata(
-    selectedDocumentUuid.value,
-    publicatie.value,
-    documenten.value
-  );
+	metadataError.value = null;
+	showMetadataPreview.value = true;
 
-  if (!result) return;
+	const result = await generateMetadataPreview(publicatie.value, documenten.value);
 
-  // Apply publication-level metadata
-  publicatie.value = { ...publicatie.value, ...result.publicatie };
+	if (result) {
+		metadataPreviewData.value = result;
+	} else {
+		metadataError.value = "Kon geen metadata suggesties genereren";
+	}
+};
 
-  // Apply document-level metadata
-  if (result.document) {
-    const docIndex = documenten.value.findIndex((d) => d.uuid === selectedDocumentUuid.value);
-    if (docIndex !== -1) {
-      documenten.value[docIndex] = { ...documenten.value[docIndex], ...result.document };
-    }
-  }
+const handleMetadataPreviewClose = () => {
+	showMetadataPreview.value = false;
+	metadataPreviewData.value = null;
+	metadataError.value = null;
+};
 
-  toast.add({ text: "Metadata is succesvol gegenereerd." });
+const handleMetadataPreviewConfirm = (
+	data: import("./components/MetadataPreviewModal.vue").MetadataPreviewData
+) => {
+	const result = applyMetadataSuggestions(data);
+
+	// Apply publication-level metadata
+	if (Object.keys(result.publicatie).length > 0) {
+		publicatie.value = { ...publicatie.value, ...result.publicatie };
+	}
+
+	// Apply document-level metadata
+	for (const [docUuid, docUpdate] of result.documents) {
+		const docIndex = documenten.value.findIndex((d) => d.uuid === docUuid);
+		if (docIndex !== -1) {
+			documenten.value[docIndex] = { ...documenten.value[docIndex], ...docUpdate };
+		}
+	}
+
+	showMetadataPreview.value = false;
+	metadataPreviewData.value = null;
+
+	const appliedCount =
+		data.publicationSuggestions.filter((s) => s.selected).length +
+		data.documentSuggestions.reduce((acc, doc) => acc + doc.fields.filter((s) => s.selected).length, 0);
+
+	toast.add({ text: `${appliedCount} metadata velden toegepast.` });
 };
 
 const navigate = () => {

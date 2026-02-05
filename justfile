@@ -1,5 +1,16 @@
 # GPP Monorepo - Development Commands
 # Run 'just' or 'just help' to see available commands
+#
+# Service-specific commands are available via:
+#   just woo-hoo <command>   # e.g., just woo-hoo test
+#   just gpp-app <command>   # e.g., just gpp-app lint
+#
+# Or run directly in service directories:
+#   cd services/woo-hoo && just test
+
+# Import service-specific justfiles (allows 'just woo-hoo test', etc.)
+mod woo-hoo 'services/woo-hoo/justfile'
+mod gpp-app 'services/gpp-app/justfile'
 
 # Default recipe: show help
 default:
@@ -176,24 +187,31 @@ migrate-gpp-app:
 # TESTING
 # =============================================================================
 
-# Run all tests
-test: test-gpp-app test-woo-hoo
+# Run all tests (delegates to service-specific justfiles)
+test:
+    @echo "=== Running all tests ==="
+    @echo ""
+    @echo ">>> gpp-app tests"
+    just gpp-app::test
+    @echo ""
+    @echo ">>> woo-hoo tests"
+    just woo-hoo::test
 
 # Run gpp-app tests
 test-gpp-app:
-    cd services/gpp-app && dotnet test ODPC.Test
+    just gpp-app::test
 
 # Run gpp-app frontend tests
 test-gpp-app-frontend:
-    cd services/gpp-app/odpc.client && npm install && npm run test
+    just gpp-app::test-frontend
 
 # Run woo-hoo tests
 test-woo-hoo:
-    cd services/woo-hoo && uv run pytest
+    just woo-hoo::test
 
 # Run woo-hoo tests with coverage
 test-woo-hoo-cov:
-    cd services/woo-hoo && uv run pytest --cov=woo_hoo --cov-report=term-missing
+    just woo-hoo::test-cov
 
 # =============================================================================
 # BUILD & LINT
@@ -210,29 +228,41 @@ build-gpp-app:
 build-woo-hoo:
     docker compose build woo-hoo
 
-# Lint all code
-lint: lint-gpp-app lint-woo-hoo
+# Lint all code (delegates to service-specific justfiles)
+lint:
+    @echo "=== Linting all code ==="
+    @echo ""
+    @echo ">>> gpp-app lint"
+    just gpp-app::lint
+    @echo ""
+    @echo ">>> woo-hoo lint"
+    just woo-hoo::lint
 
 # Lint gpp-app
 lint-gpp-app:
-    cd services/gpp-app && dotnet format ODPC.sln --verify-no-changes
-    cd services/gpp-app/odpc.client && npm run lint
+    just gpp-app::lint
 
 # Lint woo-hoo
 lint-woo-hoo:
-    cd services/woo-hoo && uv run ruff check .
+    just woo-hoo::lint
 
-# Format all code
-format: format-gpp-app format-woo-hoo
+# Format all code (delegates to service-specific justfiles)
+format:
+    @echo "=== Formatting all code ==="
+    @echo ""
+    @echo ">>> gpp-app format"
+    just gpp-app::format
+    @echo ""
+    @echo ">>> woo-hoo format"
+    just woo-hoo::format
 
 # Format gpp-app
 format-gpp-app:
-    cd services/gpp-app && dotnet format ODPC.sln
-    cd services/gpp-app/odpc.client && npm run format
+    just gpp-app::format
 
 # Format woo-hoo
 format-woo-hoo:
-    cd services/woo-hoo && uv run ruff format .
+    just woo-hoo::format
 
 # =============================================================================
 # UTILITIES

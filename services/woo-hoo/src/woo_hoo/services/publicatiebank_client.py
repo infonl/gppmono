@@ -35,6 +35,10 @@ class DocumentDownloadError(PublicatiebankError):
     """Raised when document download fails."""
 
 
+class PublicationNotFoundError(PublicatiebankError):
+    """Raised when publication is not found in publicatiebank."""
+
+
 @dataclass
 class PublicatiebankDocument:
     """Document retrieved from publicatiebank."""
@@ -49,6 +53,22 @@ class PublicatiebankDocument:
     publicatiestatus: str
     content: bytes
     kenmerken: list[dict[str, str]]
+
+
+@dataclass
+class PublicatiebankPublication:
+    """Publication retrieved from publicatiebank."""
+
+    uuid: str
+    officiele_titel: str
+    verkorte_titel: str | None
+    omschrijving: str | None
+    publicatiestatus: str
+    publisher: str | None
+    informatie_categorieen: list[str]
+    onderwerpen: list[str]
+    kenmerken: list[dict[str, str]]
+    documents: list[PublicatiebankDocument]
 
 
 class PublicatiebankClient:
@@ -228,4 +248,154 @@ class PublicatiebankClient:
             publicatiestatus=metadata["publicatiestatus"],
             content=content,
             kenmerken=metadata.get("kenmerken", []),
+        )
+
+    async def get_publication_metadata(self, publication_uuid: str | UUID) -> dict:
+        """Get publication metadata from publicatiebank.
+
+        Args:
+            publication_uuid: UUID of the publication.
+
+        Returns:
+            Publication metadata as dict.
+
+        Raises:
+            PublicatiebankNotConfiguredError: If publicatiebank is not configured.
+            PublicationNotFoundError: If publication is not found.
+            PublicatiebankError: For other API errors.
+        """
+        if not self.is_configured:
+            raise PublicatiebankNotConfiguredError("GPP_PUBLICATIEBANK_URL is not configured")
+
+        client = await self._get_client()
+        url = f"/api/v2/publicaties/{publication_uuid}"
+
+        logger.info("Fetching publication metadata", uuid=str(publication_uuid), url=url)
+
+        try:
+            response = await client.get(url)
+
+            if response.status_code == 404:
+                raise PublicationNotFoundError(f"Publication {publication_uuid} not found in publicatiebank")
+
+            response.raise_for_status()
+            return response.json()
+
+        except httpx.HTTPStatusError as e:
+            logger.error("Publicatiebank API error", status_code=e.response.status_code, detail=e.response.text)
+            raise PublicatiebankError(f"Publicatiebank API error: {e.response.status_code}") from e
+        except httpx.RequestError as e:
+            logger.error("Publicatiebank request failed", error=str(e))
+            raise PublicatiebankError(f"Failed to connect to publicatiebank: {e}") from e
+
+    async def get_publication_documents(self, publication_uuid: str | UUID) -> list[dict]:
+        """Get documents for a publication from publicatiebank.
+
+        Args:
+            publication_uuid: UUID of the publication.
+
+        Returns:
+            List of document metadata dicts.
+
+        Raises:
+            PublicatiebankNotConfiguredError: If publicatiebank is not configured.
+            PublicatiebankError: For API errors.
+        """
+        if not self.is_configured:
+            raise PublicatiebankNotConfiguredError("GPP_PUBLICATIEBANK_URL is not configured")
+
+        client = await self._get_client()
+        url = "/api/v2/documenten"
+        params = {"publicatie": str(publication_uuid)}
+
+        logger.info("Fetching publication documents", publication_uuid=str(publication_uuid))
+
+        try:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            # Handle paginated response
+            if isinstance(data, dict) and "results" in data:
+                return data["results"]
+            return data
+
+        except httpx.HTTPStatusError as e:
+            logger.error("Publicatiebank API error", status_code=e.response.status_code, detail=e.response.text)
+            raise PublicatiebankError(f"Publicatiebank API error: {e.response.status_code}") from e
+        except httpx.RequestError as e:
+            logger.error("Publicatiebank request failed", error=str(e))
+            raise PublicatiebankError(f"Failed to connect to publicatiebank: {e}") from e
+
+    async def get_publication_with_documents(
+        self, publication_uuid: str | UUID, download_content: bool = True
+    ) -> PublicatiebankPublication:
+        """Get publication with all its documents from publicatiebank.
+
+        Args:
+            publication_uuid: UUID of the publication.
+            download_content: Whether to download document content (default True).
+
+        Returns:
+            PublicatiebankPublication with metadata and documents.
+
+        Raises:
+            PublicatiebankNotConfiguredError: If publicatiebank is not configured.
+            PublicationNotFoundError: If publication is not found.
+            DocumentDownloadError: If document download fails.
+        """
+        # Fetch publication metadata
+        pub_metadata = await self.get_publication_metadata(publication_uuid)
+
+        # Fetch document list
+        doc_list = await self.get_publication_documents(publication_uuid)
+
+        # Fetch each document with content
+        documents = []
+        for doc_meta in doc_list:
+            doc_uuid = doc_meta["uuid"]
+            content = b""
+            if download_content:
+                try:
+                    content = await self.download_document(doc_uuid)
+                except DocumentDownloadError as e:
+                    logger.warning(
+                        "Failed to download document, skipping",
+                        document_uuid=doc_uuid,
+                        error=str(e),
+                    )
+                    continue
+
+            documents.append(
+                PublicatiebankDocument(
+                    uuid=doc_meta["uuid"],
+                    officiele_titel=doc_meta["officiele_titel"],
+                    verkorte_titel=doc_meta.get("verkorte_titel"),
+                    omschrijving=doc_meta.get("omschrijving"),
+                    bestandsnaam=doc_meta["bestandsnaam"],
+                    bestandsformaat=doc_meta["bestandsformaat"],
+                    bestandsomvang=doc_meta["bestandsomvang"],
+                    publicatiestatus=doc_meta["publicatiestatus"],
+                    content=content,
+                    kenmerken=doc_meta.get("kenmerken", []),
+                )
+            )
+
+        logger.info(
+            "Publication retrieved",
+            uuid=str(publication_uuid),
+            title=pub_metadata.get("officiele_titel"),
+            document_count=len(documents),
+        )
+
+        return PublicatiebankPublication(
+            uuid=pub_metadata["uuid"],
+            officiele_titel=pub_metadata.get("officiele_titel", ""),
+            verkorte_titel=pub_metadata.get("verkorte_titel"),
+            omschrijving=pub_metadata.get("omschrijving"),
+            publicatiestatus=pub_metadata.get("publicatiestatus", ""),
+            publisher=pub_metadata.get("publisher"),
+            informatie_categorieen=pub_metadata.get("informatie_categorieen", []),
+            onderwerpen=pub_metadata.get("onderwerpen", []),
+            kenmerken=pub_metadata.get("kenmerken", []),
+            documents=documents,
         )
