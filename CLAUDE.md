@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 GPPMono is a monorepo for all things gpp. The project is in its initial setup phase.
 
 I'm on macos on ARM architecture using zsh as default shell.
-Commands should ork for this setup but also for standard Linux. Docker containers should also be buildable on standard Linux for x86 chips.
+Commands should ork for this setup but also for standard Linux. Docker containers should also be buildable on standard Linux for x86 chips. Assume rosetta installed so buildx cross run and compile should be possible.
 
 ## Current Status
 

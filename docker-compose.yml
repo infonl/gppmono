@@ -18,7 +18,9 @@ services:
   # =============================================================================
 
   postgres:
+    # PostGIS image (runs via Rosetta on ARM Macs)
     image: postgis/postgis:${PG_VERSION:-16-master}
+    platform: linux/amd64
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d
@@ -48,7 +50,9 @@ services:
       retries: 5
 
   nginx:
+    # Reverse proxy - optional for local dev, useful for prod-like testing
     image: nginx:stable-alpine
+    profiles: ["proxy", "full"]
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -58,8 +62,6 @@ services:
       gpp-app:
         condition: service_started
       publicatiebank:
-        condition: service_healthy
-      woo-hoo:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost/nginx-health"]
@@ -235,12 +237,8 @@ services:
       publicatiebank:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/me"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+    # Note: no curl/wget in .NET image, so no HTTP health check
+    # The container starting successfully is sufficient for local dev
 
   # =============================================================================
   # WOO-HOO - LLM Metadata Generation Service
@@ -275,7 +273,7 @@ services:
       - woo-hoo-logs:/app/log
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
       interval: 10s
       timeout: 5s
       retries: 5

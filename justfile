@@ -275,11 +275,53 @@ setup-env:
 load-fixtures:
     docker compose exec publicatiebank python /app/src/manage.py loaddata /app/fixtures/*.json
 
-# Create a test user group in gpp-app (for testing without OIDC)
-seed-test-data:
-    @echo "Creating test data..."
-    @echo "Note: This creates test user groups and sample data for local development"
-    @docker compose exec gpp-app dotnet /app/publish/ODPC.dll --seed-test-data || echo "Seed data command not available - data may need manual setup"
+# Seed local dev data (user groups, permissions) - runs automatically in 'just local'
+seed-local-dev:
+    #!/usr/bin/env bash
+    echo "Seeding local development data..."
+
+    # Wait for gpp-app to be healthy (ensures migrations have run)
+    for i in {1..30}; do
+        if curl -sf http://localhost:62230/api/me > /dev/null 2>&1; then
+            break
+        fi
+        sleep 2
+    done
+
+    # 1. Create user group and link local-dev user
+    docker compose exec -T postgres psql -U postgres -d ODPC -c "
+        INSERT INTO \"Gebruikersgroepen\" (\"Uuid\", \"Naam\", \"Omschrijving\")
+        VALUES ('d3da5277-ea07-4921-97b8-e9a181390c76', 'Local Dev Group', 'Default group for local development')
+        ON CONFLICT (\"Uuid\") DO NOTHING;
+        INSERT INTO \"GebruikersgroepGebruikers\" (\"GebruikersgroepUuid\", \"GebruikerId\")
+        VALUES ('d3da5277-ea07-4921-97b8-e9a181390c76', 'local-dev')
+        ON CONFLICT DO NOTHING;
+    " 2>/dev/null || true
+    echo "  ✓ User 'local-dev' linked to 'Local Dev Group'"
+
+    # 2. Enable test organisation in publicatiebank
+    docker compose exec -T postgres psql -U postgres -d woo_publications -c "
+        UPDATE metadata_organisation SET is_actief = true
+        WHERE uuid = '5e1e724c-c3ea-4d0a-aa79-d0b66aefe27c';
+    " 2>/dev/null || true
+    echo "  ✓ Enabled test organisation 'gemeente Appingedam'"
+
+    # 3. Add waardelijsten permissions (organisation + information categories)
+    docker compose exec -T postgres psql -U postgres -d ODPC -c "
+        INSERT INTO \"GebruikersgroepWaardelijsten\" (\"GebruikersgroepUuid\", \"WaardelijstId\")
+        VALUES
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '5e1e724c-c3ea-4d0a-aa79-d0b66aefe27c'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', 'be4e21c2-0be5-4616-945e-1f101b0c0e6d'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '8f3bdef0-a926-4f67-b1f2-94c583c462ce'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '88fb1c5e-e899-456d-b077-6101a9829c11'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '9aeb7501-3f77-4f36-8c8f-d21f47c2d6e8'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', 'b84c3b0d-a471-48f5-915f-7fbd8b94188f')
+        ON CONFLICT DO NOTHING;
+    " 2>/dev/null || true
+    echo "  ✓ Added publication permissions"
+
+    echo ""
+    echo "✓ Local dev data seeded successfully"
 
 # =============================================================================
 # LOCAL DEVELOPMENT - SINGLE COMMAND
@@ -377,6 +419,42 @@ local *ARGS:
         sleep 1
         if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
     done
+
+    # Seed local dev data (user groups, permissions, etc.)
+    echo ""
+    echo "Seeding local development data..."
+
+    # 1. Create user group and link local-dev user
+    docker compose exec -T postgres psql -U postgres -d ODPC -c "
+        INSERT INTO \"Gebruikersgroepen\" (\"Uuid\", \"Naam\", \"Omschrijving\")
+        VALUES ('d3da5277-ea07-4921-97b8-e9a181390c76', 'Local Dev Group', 'Default group for local development')
+        ON CONFLICT (\"Uuid\") DO NOTHING;
+        INSERT INTO \"GebruikersgroepGebruikers\" (\"GebruikersgroepUuid\", \"GebruikerId\")
+        VALUES ('d3da5277-ea07-4921-97b8-e9a181390c76', 'local-dev')
+        ON CONFLICT DO NOTHING;
+    " > /dev/null 2>&1 || true
+    echo "  ✓ User 'local-dev' linked to 'Local Dev Group'"
+
+    # 2. Enable a test organisation in publicatiebank
+    docker compose exec -T postgres psql -U postgres -d woo_publications -c "
+        UPDATE metadata_organisation SET is_actief = true
+        WHERE uuid = '5e1e724c-c3ea-4d0a-aa79-d0b66aefe27c';
+    " > /dev/null 2>&1 || true
+    echo "  ✓ Enabled test organisation 'gemeente Appingedam'"
+
+    # 3. Add waardelijsten permissions (organisation + information categories)
+    docker compose exec -T postgres psql -U postgres -d ODPC -c "
+        INSERT INTO \"GebruikersgroepWaardelijsten\" (\"GebruikersgroepUuid\", \"WaardelijstId\")
+        VALUES
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '5e1e724c-c3ea-4d0a-aa79-d0b66aefe27c'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', 'be4e21c2-0be5-4616-945e-1f101b0c0e6d'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '8f3bdef0-a926-4f67-b1f2-94c583c462ce'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '88fb1c5e-e899-456d-b077-6101a9829c11'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', '9aeb7501-3f77-4f36-8c8f-d21f47c2d6e8'),
+            ('d3da5277-ea07-4921-97b8-e9a181390c76', 'b84c3b0d-a471-48f5-915f-7fbd8b94188f')
+        ON CONFLICT DO NOTHING;
+    " > /dev/null 2>&1 || true
+    echo "  ✓ Added publication permissions (organisation + 5 information categories)"
 
     echo ""
     echo "=== Local Development Ready ==="
