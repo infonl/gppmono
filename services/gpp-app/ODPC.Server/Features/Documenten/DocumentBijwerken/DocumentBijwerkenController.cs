@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using ODPC.Apis.Odrc;
 using ODPC.Authentication;
+using ODPC.Config;
 
 namespace ODPC.Features.Documenten.DocumentBijwerken
 {
@@ -30,7 +32,9 @@ namespace ODPC.Features.Documenten.DocumentBijwerken
             }
 
             // document bijwerken
-            using var putResponse = await client.PutAsJsonAsync(url, document, token);
+            var jsonContent = JsonSerializer.Serialize(document, JsonSerialization.CamelCaseOptions);
+            using var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            using var putResponse = await client.PutAsync(url, content, token);
 
             putResponse.EnsureSuccessStatusCode();
 

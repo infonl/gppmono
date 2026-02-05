@@ -275,6 +275,10 @@ setup-env:
 load-fixtures:
     docker compose exec publicatiebank python /app/src/manage.py loaddata /app/fixtures/*.json
 
+# Load fixtures into OpenZaak (catalogi for document types)
+load-openzaak-fixtures:
+    docker compose exec openzaak-web python /app/src/manage.py loaddata /app/fixtures/*.json
+
 # Seed local dev data (user groups, permissions) - runs automatically in 'just local'
 seed-local-dev:
     #!/usr/bin/env bash
@@ -387,6 +391,17 @@ local *ARGS:
         if [ $i -eq 10 ]; then echo "✗ (timeout)"; fi
     done
 
+    # Wait for openzaak
+    echo -n "  OpenZaak: "
+    for i in {1..60}; do
+        if curl -sf http://localhost:8001/ > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 2
+        if [ $i -eq 60 ]; then echo "✗ (timeout)"; fi
+    done
+
     # Wait for publicatiebank
     echo -n "  Publicatiebank: "
     for i in {1..60}; do
@@ -455,6 +470,11 @@ local *ARGS:
         ON CONFLICT DO NOTHING;
     " > /dev/null 2>&1 || true
     echo "  ✓ Added publication permissions (organisation + 5 information categories)"
+
+    # 4. Load OpenZaak fixtures (catalogi for document types)
+    docker compose exec -T openzaak-web python /app/src/manage.py loaddata /app/fixtures/configuration.json > /dev/null 2>&1 || true
+    docker compose exec -T openzaak-web python /app/src/manage.py loaddata /app/fixtures/catalogi.json > /dev/null 2>&1 || true
+    echo "  ✓ Loaded OpenZaak catalogi (document type definitions)"
 
     echo ""
     echo "=== Local Development Ready ==="

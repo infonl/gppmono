@@ -1,0 +1,396 @@
+[
+{
+  "model": "catalogi.catalogus",
+  "pk": 1,
+  "fields": {
+    "_etag": "c596d360edc1952af7cd049e7f6f9df8",
+    "naam": "Woo Publications Catalogus",
+    "uuid": "63e48a2e-f6a5-4344-947d-5fb61e328ad8",
+    "domein": "WOO",
+    "rsin": "000000000",
+    "contactpersoon_beheer_naam": "Admin",
+    "contactpersoon_beheer_telefoonnummer": "",
+    "contactpersoon_beheer_emailadres": "admin@localhost",
+    "versie": "",
+    "begindatum_versie": null
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 1,
+  "fields": {
+    "_etag": "edd9775e4f04b6ab97aef2658b3a73de",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "be4e21c2-0be5-4616-945e-1f101b0c0e6d",
+    "omschrijving": "wet of algemeen verbindend voorschrift",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 2,
+  "fields": {
+    "_etag": "56feb3ffe3411f38afc82d3e606b2bc2",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "8f3bdef0-a926-4f67-b1f2-94c583c462ce",
+    "omschrijving": "overig besluit van algemene strekking",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 3,
+  "fields": {
+    "_etag": "cbb55fbd27b508545f74912c54c5fa5d",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "88fb1c5e-e899-456d-b077-6101a9829c11",
+    "omschrijving": "ontwerp van wet- en regelgeving met adviesaanvraag",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 4,
+  "fields": {
+    "_etag": "1e76ce8c72c20b79acd9335cfe429cb8",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "9aeb7501-3f77-4f36-8c8f-d21f47c2d6e8",
+    "omschrijving": "organisatie en werkwijze",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 5,
+  "fields": {
+    "_etag": "243dd4b517c0f9bc83a46b9455483554",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "7184027d-5634-4bd4-8121-871916384f0e",
+    "omschrijving": "bereikbaarheidsgegevens",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 6,
+  "fields": {
+    "_etag": "88b8493dc15bea8cdb4288ce2b0bd5d8",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "ca9a38d6-5774-43fb-acc0-04832e9fd231",
+    "omschrijving": "bij vertegenwoordigend orgaan ingekomen stuk",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 7,
+  "fields": {
+    "_etag": "a90d4a1fe4efbdc825091a9479b89795",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "568ebb54-9e43-4c12-924f-77f7d812026d",
+    "omschrijving": "vergaderstuk Staten-Generaal",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 8,
+  "fields": {
+    "_etag": "b40d2891e7d1b7b08dd968b2e1df95d0",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "57e3c1e2-53aa-4d2c-888d-7232288dd425",
+    "omschrijving": "vergaderstuk decentrale overheid",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 9,
+  "fields": {
+    "_etag": "817ad857c63d8d4566f7cb0f29fb923a",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "380f49a4-8578-4317-b91e-3dfd13bab89b",
+    "omschrijving": "agenda of besluitenlijst bestuurscollege",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 10,
+  "fields": {
+    "_etag": "0000091c3e0c10e8f9f6b7eadc3fcc98",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "5bfcb832-e940-493e-8050-699053f4f56a",
+    "omschrijving": "advies",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 11,
+  "fields": {
+    "_etag": "3d1e57647b99d5a90f74808e9e57c479",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "7ee891df-ca3e-4b19-b9e5-494bc3c485ea",
+    "omschrijving": "convenant",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 12,
+  "fields": {
+    "_etag": "d97c5e075425f70442465adf365fef31",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "f4de3422-ce74-45c7-b881-45bebe90984f",
+    "omschrijving": "jaarplan of jaarverslag",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 13,
+  "fields": {
+    "_etag": "b0d8738f6df755f1c825cc5d5ca39aa8",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "68e33566-9f48-4547-8024-2d0d03b54b4d",
+    "omschrijving": "subsidieverplichting anders dan met beschikking",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 14,
+  "fields": {
+    "_etag": "a63a61b695e6dfe2c2c3d066ef2a77e2",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "b84c3b0d-a471-48f5-915f-7fbd8b94188f",
+    "omschrijving": "Woo-verzoek of -besluit",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 15,
+  "fields": {
+    "_etag": "8557d9ca6814bed72dd28540338f84d8",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "e7f1b136-58f1-4d7e-82b3-0571e2388058",
+    "omschrijving": "onderzoeksrapport",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 16,
+  "fields": {
+    "_etag": "d26b8f3d55e40eb9e480f74ac58d8260",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "d3008496-a014-431a-8b6b-0813f09e6085",
+    "omschrijving": "beschikking",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 17,
+  "fields": {
+    "_etag": "4b5dee51ba5062c5d22eedfb20ce6d05",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "3e9298ed-c90a-49fb-b89d-0cc060b7b0f7",
+    "omschrijving": "klachtoordeel",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 18,
+  "fields": {
+    "_etag": "3f02d62b1444d6ee09436192c8900ff2",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "8223209f-a502-4dda-b1b6-c33b61525239",
+    "omschrijving": "inspanningsverplichting art 3.1 Woo",
+    "informatieobjectcategorie": "",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "",
+    "catalogus": 1
+  }
+}
+]

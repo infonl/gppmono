@@ -50,7 +50,7 @@ namespace ODPC.Features.Metadata
                 return StatusCode(503, "Metadata generation service is not configured.");
             }
 
-            var odrcUrl = config["ODRC_BASE_URL"] ?? "http://localhost:8000";
+            var odrcUrl = (config["ODRC_BASE_URL"] ?? "http://localhost:8000").TrimEnd('/');
             var odrcApiKey = config["ODRC_API_KEY"];
 
             try

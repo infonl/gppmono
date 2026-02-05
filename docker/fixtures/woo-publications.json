@@ -54,5 +54,16 @@
         "certificate": "",
         "certificate_key": ""
     }
+},
+{
+    "model": "config.globalconfiguration",
+    "pk": 1,
+    "fields": {
+        "documents_api_service": 1,
+        "organisation_rsin": "000000000",
+        "gpp_search_service": null,
+        "gpp_app_publication_url_template": "",
+        "gpp_burgerportaal_publication_url_template": ""
+    }
 }
 ]

@@ -4,9 +4,20 @@ namespace ODPC.Config
 {
     public static class JsonSerialization
     {
-        public static readonly JsonSerializerOptions Options = new()
+        /// <summary>
+        /// Options for serializing to camelCase (for frontend communication).
+        /// </summary>
+        public static readonly JsonSerializerOptions CamelCaseOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        /// <summary>
+        /// Options for serializing to snake_case (for publicatiebank API).
+        /// </summary>
+        public static readonly JsonSerializerOptions SnakeCaseOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
         };
     }
 }

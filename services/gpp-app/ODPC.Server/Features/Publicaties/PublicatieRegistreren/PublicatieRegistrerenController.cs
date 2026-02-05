@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using ODPC.Apis.Odrc;
+using ODPC.Config;
 using ODPC.Data;
 
 namespace ODPC.Features.Publicaties.PublicatieRegistreren
@@ -7,11 +9,16 @@ namespace ODPC.Features.Publicaties.PublicatieRegistreren
     [ApiController]
     public class PublicatieRegistrerenController(
         IOdrcClientFactory clientFactory,
-        IGebruikerWaardelijstItemsService waardelijstItemsService) : ControllerBase
+        IGebruikerWaardelijstItemsService waardelijstItemsService,
+        ILogger<PublicatieRegistrerenController> logger) : ControllerBase
     {
         [HttpPost("api/{version}/publicaties")]
         public async Task<IActionResult> Post(string version, Publicatie publicatie, CancellationToken token)
         {
+            // Debug: Log the incoming publicatie
+            logger.LogInformation("Received publicatie: Publisher={Publisher}, OfficieleTitel={OfficieleTitel}, InformatieCategorieen={InformatieCategorieen}",
+                publicatie.Publisher, publicatie.OfficieleTitel, publicatie.InformatieCategorieen != null ? string.Join(",", publicatie.InformatieCategorieen) : "null");
+
             Guid? eigenaarGroepIdentifier = Guid.TryParse(publicatie.EigenaarGroep?.identifier, out var identifier)
                 ? identifier
                 : null;
@@ -48,7 +55,19 @@ namespace ODPC.Features.Publicaties.PublicatieRegistreren
 
             var url = $"/api/{version}/publicaties";
 
-            using var response = await client.PostAsJsonAsync<Publicatie>(url, publicatie, token);
+            // Debug: Log the JSON that will be sent (publicatiebank expects camelCase, uses CamelCaseJSONParser)
+            var jsonToSend = JsonSerializer.Serialize(publicatie, JsonSerialization.CamelCaseOptions);
+            logger.LogInformation("Sending JSON to publicatiebank: {Json}", jsonToSend);
+
+            // Manually create StringContent to ensure proper serialization
+            using var content = new StringContent(jsonToSend, System.Text.Encoding.UTF8, "application/json");
+            using var response = await client.PostAsync(url, content, token);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(token);
+                logger.LogError("Publicatiebank returned {StatusCode}: {ErrorContent}", (int)response.StatusCode, errorContent);
+            }
 
             response.EnsureSuccessStatusCode();
 

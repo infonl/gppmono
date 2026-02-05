@@ -38,7 +38,7 @@
     "pk": 3,
     "fields": {
         "api_type": "ztc",
-        "enabled": false
+        "enabled": true
     }
 },
 {
@@ -138,6 +138,14 @@
         "outway": "",
         "certificate": "",
         "certificate_key": ""
+    }
+},
+{
+    "model": "sites.site",
+    "pk": 1,
+    "fields": {
+        "domain": "openzaak.docker.internal:8001",
+        "name": "OpenZaak Local Dev"
     }
 }
 ]

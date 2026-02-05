@@ -61,7 +61,44 @@ just down
 ```
 
 ## Architecture
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           METADATA GENERATION FLOW                            │
+└──────────────────────────────────────────────────────────────────────────────┘
 
+┌─────────────┐    ┌─────────────┐    ┌───────────────┐    ┌──────────────┐
+│   Browser   │───▶│   gpp-app   │───▶│ publicatiebank│───▶│   OpenZaak   │
+│  (Vue.js)   │    │  (.NET 8)   │    │   (Django)    │    │  (DRC API)   │
+└─────────────┘    └─────────────┘    └───────────────┘    └──────────────┘
+      │                   │                   │                    │
+      │                   │                   │                    │
+      │                   ▼                   │                    │
+      │            ┌─────────────┐            │                    │
+      │            │   woo-hoo   │            │                    │
+      │            │  (FastAPI)  │            │                    │
+      │            │  LLM/OCR    │            │                    │
+      │            └─────────────┘            │                    │
+      │                                       │                    │
+      │                                       ▼                    │
+      │                              ┌───────────────┐             │
+      │                              │ celery worker │─────────────┘
+      │                              │  (strip_pdf)  │
+      │                              └───────────────┘
+
+STEP BY STEP:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. DOCUMENT UPLOAD (User → gpp-app → publicatiebank → OpenZaak)
+   Browser POST /api/v2/documenten ──▶ gpp-app ──▶ publicatiebank ──▶ OpenZaak
+   
+2. STRIP_PDF TASK (celery → OpenZaak)  
+   celery downloads from OpenZaak ──▶ strips metadata ──▶ uploads NEW to OpenZaak
+   
+3. METADATA GENERATION (gpp-app → publicatiebank → OpenZaak → woo-hoo)
+   gpp-app GET /api/v2/documenten/{uuid}/download ──▶ publicatiebank 
+   publicatiebank proxies to OpenZaak ──▶ returns PDF
+   gpp-app POST /api/v1/metadata/generate-from-file ──▶ woo-hoo
+```
 ```
                                     ┌──────────────────┐
                                     │   Browser/User   │

@@ -79,6 +79,7 @@ services:
       DJANGO_SETTINGS_MODULE: openzaak.conf.patched_settings
       SECRET_KEY: ${SECRET_KEY:-django-insecure-openzaak-dev-key-change-in-production}
       ALLOWED_HOSTS: openzaak,openzaak.docker.internal,localhost
+      OPENZAAK_DOMAIN: openzaak.docker.internal:8001
       DB_NAME: openzaak
       DB_USER: postgres
       DB_PASSWORD: localdev
@@ -193,6 +194,9 @@ services:
     volumes:
       - publicatiebank-media:/app/media
       - publicatiebank-log:/app/log
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "openzaak.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

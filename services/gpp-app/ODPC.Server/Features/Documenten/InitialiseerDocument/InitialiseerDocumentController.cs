@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using ODPC.Apis.Odrc;
+using ODPC.Config;
 
 namespace ODPC.Features.Documenten.InitialiseerDocument
 {
@@ -13,7 +15,9 @@ namespace ODPC.Features.Documenten.InitialiseerDocument
 
             var url = $"/api/{version}/documenten";
 
-            using var response = await client.PostAsJsonAsync(url, document, token);
+            var jsonContent = JsonSerializer.Serialize(document, JsonSerialization.CamelCaseOptions);
+            using var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            using var response = await client.PostAsync(url, content, token);
 
             response.EnsureSuccessStatusCode();
 

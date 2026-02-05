@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ODPC.Apis.Odrc;
 using ODPC.Authentication;
+using ODPC.Config;
 using ODPC.Data;
 
 namespace ODPC.Features.Publicaties.PublicatieBijwerken
@@ -68,7 +70,9 @@ namespace ODPC.Features.Publicaties.PublicatieBijwerken
             }
 
             // publicatie bijwerken
-            using var putResponse = await client.PutAsJsonAsync<Publicatie>(url, publicatie, token);
+            var jsonContent = JsonSerializer.Serialize(publicatie, JsonSerialization.CamelCaseOptions);
+            using var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            using var putResponse = await client.PutAsync(url, content, token);
 
             putResponse.EnsureSuccessStatusCode();
 
