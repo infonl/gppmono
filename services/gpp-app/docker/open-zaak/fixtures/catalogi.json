@@ -392,5 +392,26 @@
     "omschrijving_generiek_opmerking": "",
     "catalogus": 1
   }
+},
+{
+  "model": "catalogi.informatieobjecttype",
+  "pk": 19,
+  "fields": {
+    "_etag": "a0b1c2d3e4f5g6h7i8j9k0l1m2n3",
+    "datum_begin_geldigheid": "2024-01-01",
+    "datum_einde_geldigheid": null,
+    "concept": false,
+    "uuid": "0f06fded-7e08-437d-9fa2-021841a93842",
+    "omschrijving": "Dummy informatieobjecttype (concept publications)",
+    "informatieobjectcategorie": "Wet Open Overheid",
+    "trefwoord": "[]",
+    "vertrouwelijkheidaanduiding": "openbaar",
+    "omschrijving_generiek_informatieobjecttype": "",
+    "omschrijving_generiek_definitie": "",
+    "omschrijving_generiek_herkomst": "",
+    "omschrijving_generiek_hierarchie": "",
+    "omschrijving_generiek_opmerking": "Used for concept publications without an information category",
+    "catalogus": 1
+  }
 }
 ]

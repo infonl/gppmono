@@ -80,6 +80,9 @@ services:
       SECRET_KEY: ${SECRET_KEY:-django-insecure-openzaak-dev-key-change-in-production}
       ALLOWED_HOSTS: openzaak,openzaak.docker.internal,localhost
       OPENZAAK_DOMAIN: openzaak.docker.internal:8001
+      # Tell django-loose-fk that OpenZaak's own URLs are local (resolves via Django URL routing)
+      # Note: publicatiebank URLs are NOT local - they are resolved via HTTP by the Service configuration
+      LOOSE_FK_LOCAL_BASE_URLS: http://openzaak.docker.internal:8001/
       DB_NAME: openzaak
       DB_USER: postgres
       DB_PASSWORD: localdev
@@ -112,6 +115,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "openzaak.docker.internal:host-gateway"
+      - "publicatiebank.docker.internal:host-gateway"
     ports:
       - "8001:8000"
     restart: unless-stopped
@@ -190,8 +194,10 @@ services:
     image: maykinmedia/woo-publications:${PUBLICATIEBANK_VERSION:-latest}
     pull_policy: always
     environment: *publicatiebank-env
-    command: /celery_worker.sh
+    entrypoint: ["/app/celery-entrypoint.sh"]
     volumes:
+      - ./services/gpp-app/docker/odrc/patches:/app/patches
+      - ./services/gpp-app/docker/odrc/celery-entrypoint.sh:/app/celery-entrypoint.sh
       - publicatiebank-media:/app/media
       - publicatiebank-log:/app/log
     extra_hosts:
