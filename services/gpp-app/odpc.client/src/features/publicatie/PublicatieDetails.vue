@@ -204,16 +204,18 @@ const { previousRoute } = usePreviousRoute();
 
 const { deleteDialog, draftDialog, retractDialog, noDocumentsDialog } = useDialogs();
 const {
-	isGenerating,
-	isAvailable,
-	checkAvailability,
-	generateMetadataPreview,
-	applyMetadataSuggestions
+  isGenerating,
+  isAvailable,
+  checkAvailability,
+  generateMetadataPreview,
+  applyMetadataSuggestions
 } = useGenerateMetadata();
 
 // Metadata preview state
 const showMetadataPreview = ref(false);
-const metadataPreviewData = ref<import("./components/MetadataPreviewModal.vue").MetadataPreviewData | null>(null);
+const metadataPreviewData = ref<
+  import("./components/MetadataPreviewModal.vue").MetadataPreviewData | null
+>(null);
 const metadataError = ref<string | null>(null);
 
 onMounted(checkAvailability);
@@ -368,52 +370,55 @@ watch(
 const existingDocuments = computed(() => documenten.value.filter((doc) => doc.uuid));
 
 const handleGenerateMetadata = async () => {
-	if (!existingDocuments.value.length) return;
+  if (!existingDocuments.value.length) return;
 
-	metadataError.value = null;
-	showMetadataPreview.value = true;
+  metadataError.value = null;
+  showMetadataPreview.value = true;
 
-	const result = await generateMetadataPreview(publicatie.value, documenten.value);
+  const result = await generateMetadataPreview(publicatie.value, documenten.value);
 
-	if (result) {
-		metadataPreviewData.value = result;
-	} else {
-		metadataError.value = "Kon geen metadata suggesties genereren";
-	}
+  if (result) {
+    metadataPreviewData.value = result;
+  } else {
+    metadataError.value = "Kon geen metadata suggesties genereren";
+  }
 };
 
 const handleMetadataPreviewClose = () => {
-	showMetadataPreview.value = false;
-	metadataPreviewData.value = null;
-	metadataError.value = null;
+  showMetadataPreview.value = false;
+  metadataPreviewData.value = null;
+  metadataError.value = null;
 };
 
 const handleMetadataPreviewConfirm = (
-	data: import("./components/MetadataPreviewModal.vue").MetadataPreviewData
+  data: import("./components/MetadataPreviewModal.vue").MetadataPreviewData
 ) => {
-	const result = applyMetadataSuggestions(data);
+  const result = applyMetadataSuggestions(data);
 
-	// Apply publication-level metadata
-	if (Object.keys(result.publicatie).length > 0) {
-		publicatie.value = { ...publicatie.value, ...result.publicatie };
-	}
+  // Apply publication-level metadata
+  if (Object.keys(result.publicatie).length > 0) {
+    publicatie.value = { ...publicatie.value, ...result.publicatie };
+  }
 
-	// Apply document-level metadata
-	for (const [docUuid, docUpdate] of result.documents) {
-		const docIndex = documenten.value.findIndex((d) => d.uuid === docUuid);
-		if (docIndex !== -1) {
-			documenten.value[docIndex] = { ...documenten.value[docIndex], ...docUpdate };
-		}
-	}
+  // Apply document-level metadata
+  for (const [docUuid, docUpdate] of result.documents) {
+    const docIndex = documenten.value.findIndex((d) => d.uuid === docUuid);
+    if (docIndex !== -1) {
+      documenten.value[docIndex] = { ...documenten.value[docIndex], ...docUpdate };
+    }
+  }
 
-	showMetadataPreview.value = false;
-	metadataPreviewData.value = null;
+  showMetadataPreview.value = false;
+  metadataPreviewData.value = null;
 
-	const appliedCount =
-		data.publicationSuggestions.filter((s) => s.selected).length +
-		data.documentSuggestions.reduce((acc, doc) => acc + doc.fields.filter((s) => s.selected).length, 0);
+  const appliedCount =
+    data.publicationSuggestions.filter((s) => s.selected).length +
+    data.documentSuggestions.reduce(
+      (acc, doc) => acc + doc.fields.filter((s) => s.selected).length,
+      0
+    );
 
-	toast.add({ text: `${appliedCount} metadata velden toegepast.` });
+  toast.add({ text: `${appliedCount} metadata velden toegepast.` });
 };
 
 const navigate = () => {
