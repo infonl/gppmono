@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from gpp_app import __version__
-from gpp_app.api import auth, publications, documents, metadata, user_groups
+from gpp_app.api import auth, formats, publications, documents, metadata, user_groups
 from gpp_app.api.health import router as health_router
 from gpp_app.config import get_settings
 from gpp_app.utils.logging import get_logger, setup_logging
@@ -84,7 +84,9 @@ def create_app() -> FastAPI:
     # Include API routers
     app.include_router(health_router)
     app.include_router(auth.router, prefix="/api", tags=["auth"])
-    app.include_router(user_groups.router, prefix="/api/v1", tags=["user_groups"])
+    # User groups and formats mounted at /api (not /api/v1) to match frontend expectations
+    app.include_router(user_groups.router, prefix="/api", tags=["user_groups"])
+    app.include_router(formats.router, prefix="/api", tags=["formats"])
     app.include_router(publications.router, prefix="/api/v1", tags=["publications"])
     app.include_router(documents.router, prefix="/api/v1", tags=["documents"])
     app.include_router(metadata.router, prefix="/api/v1", tags=["metadata"])

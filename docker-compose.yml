@@ -211,10 +211,12 @@ services:
     restart: unless-stopped
 
   # =============================================================================
-  # GPP-APP (ODPC) - Publication Composer (.NET + Vue)
+  # GPP-APP (ODPC) - Publication Composer (.NET + Vue) [LEGACY]
+  # Use --profile legacy to run this, or use gpp-app-fastapi instead
   # =============================================================================
 
   gpp-app:
+    profiles: ["legacy"]
     build:
       context: ./services/gpp-app
       dockerfile: ODPC.Server/Dockerfile
@@ -300,8 +302,8 @@ services:
       context: ./services/gpp-api
       dockerfile: Dockerfile
     environment:
-      # Database
-      DATABASE_URL: postgresql+asyncpg://postgres:localdev@postgres:5432/gpp_api
+      # Database - uses woo_publications (same as publicatiebank) for shared metadata
+      DATABASE_URL: postgresql+asyncpg://postgres:localdev@postgres:5432/woo_publications
       DB_ECHO: "false"
       # Redis
       REDIS_URL: redis://redis:6379/3

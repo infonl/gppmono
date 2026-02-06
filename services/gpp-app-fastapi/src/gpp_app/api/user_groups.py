@@ -7,6 +7,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+
+from gpp_app.schemas import CamelModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,8 +45,8 @@ class GebruikersgroepUpdate(BaseModel):
     gekoppelde_gebruikers: list[str] = []
 
 
-class GebruikersgroepResponse(BaseModel):
-    """Response model for a user group."""
+class GebruikersgroepResponse(CamelModel):
+    """Response model for a user group (admin API)."""
 
     uuid: UUID
     naam: str
@@ -52,33 +54,24 @@ class GebruikersgroepResponse(BaseModel):
     gekoppelde_waardelijsten: list[str]
     gekoppelde_gebruikers: list[str]
 
-    class Config:
-        from_attributes = True
 
+class MijnGebruikersgroepResponse(CamelModel):
+    """Response model for user's group (frontend API - camelCase)."""
 
-class GebruikersgroepListResponse(BaseModel):
-    """Response model for list of user groups."""
-
-    count: int
-    results: list[GebruikersgroepResponse]
-
-
-class MijnGebruikersgroepenResponse(BaseModel):
-    """Response model for user's groups."""
-
-    groups: list[GebruikersgroepResponse]
-    waardelijsten: list[str]
+    uuid: UUID
+    naam: str
+    gekoppelde_waardelijsten: list[str]
 
 
 # Database dependency
 DbSession = Annotated[AsyncSession, Depends(get_session)]
 
 
-@router.get("/gebruikersgroepen", response_model=GebruikersgroepListResponse)
+@router.get("/gebruikersgroepen", response_model=list[GebruikersgroepResponse])
 async def list_user_groups(
     user: AdminUser,
     db: DbSession,
-) -> GebruikersgroepListResponse:
+) -> list[GebruikersgroepResponse]:
     """List all user groups (admin only).
 
     Args:
@@ -119,10 +112,7 @@ async def list_user_groups(
             )
         )
 
-    return GebruikersgroepListResponse(
-        count=len(response_groups),
-        results=response_groups,
-    )
+    return response_groups
 
 
 @router.get("/gebruikersgroepen/{uuid}", response_model=GebruikersgroepResponse)
@@ -361,22 +351,25 @@ async def delete_user_group(
     )
 
 
-@router.get("/mijn-gebruikersgroepen", response_model=MijnGebruikersgroepenResponse)
+@router.get("/mijn-gebruikersgroepen", response_model=list[MijnGebruikersgroepResponse])
 async def get_my_groups(
     user: Annotated[OdpcUser, Depends(get_current_user)],
     db: DbSession,
-) -> MijnGebruikersgroepenResponse:
-    """Get the current user's groups and accessible value lists.
+) -> list[MijnGebruikersgroepResponse]:
+    """Get the current user's groups.
+
+    Returns an array of groups with their linked waardelijsten.
+    The frontend expects: [{ uuid, naam, gekoppeldeWaardelijsten }]
 
     Args:
         user: Current user
         db: Database session
 
     Returns:
-        User's groups and accessible value lists
+        List of user's groups with waardelijsten
     """
     if not user.id:
-        return MijnGebruikersgroepenResponse(groups=[], waardelijsten=[])
+        return []
 
     # Find groups where user is a member (case-insensitive)
     result = await db.execute(
@@ -387,7 +380,7 @@ async def get_my_groups(
     group_uuids = [row[0] for row in result.all()]
 
     if not group_uuids:
-        return MijnGebruikersgroepenResponse(groups=[], waardelijsten=[])
+        return []
 
     # Get group details
     groups_result = await db.execute(
@@ -395,8 +388,6 @@ async def get_my_groups(
     )
     groups = groups_result.scalars().all()
 
-    # Collect all waardelijsten
-    all_waardelijsten: set[str] = set()
     response_groups = []
 
     for group in groups:
@@ -407,27 +398,13 @@ async def get_my_groups(
             )
         )
         waardelijsten = [str(row[0]) for row in wl_result.all()]
-        all_waardelijsten.update(waardelijsten)
-
-        # Get gebruikers for this group
-        gb_result = await db.execute(
-            select(GebruikersgroepGebruiker.gebruiker_id).where(
-                GebruikersgroepGebruiker.gebruikersgroep_uuid == group.uuid
-            )
-        )
-        gebruikers = [row[0] for row in gb_result.all()]
 
         response_groups.append(
-            GebruikersgroepResponse(
+            MijnGebruikersgroepResponse(
                 uuid=group.uuid,
                 naam=group.naam,
-                omschrijving=group.omschrijving,
                 gekoppelde_waardelijsten=waardelijsten,
-                gekoppelde_gebruikers=gebruikers,
             )
         )
 
-    return MijnGebruikersgroepenResponse(
-        groups=response_groups,
-        waardelijsten=list(all_waardelijsten),
-    )
+    return response_groups

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.responses import RedirectResponse
 
 from gpp_app.auth.oidc import (
@@ -22,12 +22,15 @@ router = APIRouter()
 
 
 class MeResponse(BaseModel):
-    """Response model for /api/me endpoint."""
+    """Response model for /api/me endpoint.
 
-    is_logged_in: bool
-    is_admin: bool
+    Uses camelCase for JSON serialization to match Vue frontend expectations.
+    """
+
+    is_logged_in: bool = Field(serialization_alias="isLoggedIn")
+    is_admin: bool = Field(serialization_alias="isAdmin")
     id: str | None
-    full_name: str | None
+    full_name: str | None = Field(serialization_alias="fullName")
     email: str | None
     roles: list[str]
 

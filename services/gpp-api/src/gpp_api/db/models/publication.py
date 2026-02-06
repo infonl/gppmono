@@ -1,8 +1,7 @@
-"""Publication and Document models."""
+"""Publication and Document models matching publicatiebank database schema."""
 
 from __future__ import annotations
 
-import uuid
 from datetime import date, datetime
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -18,13 +17,12 @@ from sqlalchemy import (
     String,
     Table,
     Text,
-    UniqueConstraint,
     Column,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from gpp_api.db.models.base import Base, TimestampMixin, UUIDMixin, VersionMixin
+from gpp_api.db.models.base import Base, IDMixin, UUIDMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from gpp_api.db.models.accounts import OrganisationMember, OrganisationUnit
@@ -39,53 +37,56 @@ class PublicationStatus(str, Enum):
     INGETROKKEN = "ingetrokken"
 
 
-# Association tables for many-to-many relationships
-publication_information_categories = Table(
-    "publication_information_categories",
+# Association table for publication <-> information categories (M2M)
+publication_categories = Table(
+    "publications_publication_informatie_categorieen",
     Base.metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
     Column(
-        "publication_uuid",
-        UUID(as_uuid=True),
-        ForeignKey("publication.uuid", ondelete="CASCADE"),
-        primary_key=True,
+        "publication_id",
+        BigInteger,
+        ForeignKey("publications_publication.id", ondelete="CASCADE"),
+        nullable=False,
     ),
     Column(
-        "information_category_uuid",
-        UUID(as_uuid=True),
-        ForeignKey("information_category.uuid", ondelete="CASCADE"),
-        primary_key=True,
+        "informationcategory_id",
+        BigInteger,
+        ForeignKey("metadata_informationcategory.id", ondelete="CASCADE"),
+        nullable=False,
     ),
 )
 
+# Association table for publication <-> topics (M2M)
 publication_topics = Table(
-    "publication_topics",
+    "publications_publication_onderwerpen",
     Base.metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
     Column(
-        "publication_uuid",
-        UUID(as_uuid=True),
-        ForeignKey("publication.uuid", ondelete="CASCADE"),
-        primary_key=True,
+        "publication_id",
+        BigInteger,
+        ForeignKey("publications_publication.id", ondelete="CASCADE"),
+        nullable=False,
     ),
     Column(
-        "topic_uuid",
-        UUID(as_uuid=True),
-        ForeignKey("topic.uuid", ondelete="CASCADE"),
-        primary_key=True,
+        "topic_id",
+        BigInteger,
+        ForeignKey("publications_topic.id", ondelete="CASCADE"),
+        nullable=False,
     ),
 )
 
 
-class Publication(Base, UUIDMixin, TimestampMixin, VersionMixin):
+class Publication(Base, IDMixin, UUIDMixin, TimestampMixin):
     """Publication model - container for documents."""
 
-    __tablename__ = "publication"
+    __tablename__ = "publications_publication"
 
     # Titles and description
     officiele_titel: Mapped[str] = mapped_column(String(255), nullable=False)
-    verkorte_titel: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    omschrijving: Mapped[str | None] = mapped_column(Text, nullable=True)
+    verkorte_titel: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    omschrijving: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
-    # Status - managed by state machine
+    # Status
     publicatiestatus: Mapped[str] = mapped_column(
         String(12),
         default=PublicationStatus.CONCEPT.value,
@@ -93,32 +94,32 @@ class Publication(Base, UUIDMixin, TimestampMixin, VersionMixin):
         index=True,
     )
 
-    # Organisational relationships
-    publisher_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organisation.uuid"),
+    # Organisational relationships (using integer FKs like Django)
+    publisher_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("metadata_organisation.id"),
         nullable=True,
     )
-    verantwoordelijke_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organisation.uuid"),
+    verantwoordelijke_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("metadata_organisation.id"),
         nullable=True,
     )
-    opsteller_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organisation.uuid"),
+    opsteller_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("metadata_organisation.id"),
         nullable=True,
     )
 
-    # Owner relationships
-    eigenaar_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organisation_member.uuid"),
-        nullable=True,
+    # Owner relationships (using integer FKs like Django)
+    eigenaar_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("accounts_organisationmember.id"),
+        nullable=False,
     )
-    eigenaar_groep_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organisation_unit.uuid"),
+    eigenaar_groep_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("accounts_organisationunit.id"),
         nullable=True,
     )
 
@@ -135,43 +136,43 @@ class Publication(Base, UUIDMixin, TimestampMixin, VersionMixin):
     datum_einde_geldigheid: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     # Retention/archiving fields
-    bron_bewaartermijn: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    selectiecategorie: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    archiefnominatie: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    bron_bewaartermijn: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    selectiecategorie: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    archiefnominatie: Mapped[str] = mapped_column(String(50), nullable=False, default="")
     archiefactiedatum: Mapped[date | None] = mapped_column(Date, nullable=True)
-    toelichting_bewaartermijn: Mapped[str | None] = mapped_column(Text, nullable=True)
+    toelichting_bewaartermijn: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     # Relationships
     publisher: Mapped[Organisation | None] = relationship(
         "Organisation",
-        foreign_keys=[publisher_uuid],
+        foreign_keys=[publisher_id],
         lazy="selectin",
     )
     verantwoordelijke: Mapped[Organisation | None] = relationship(
         "Organisation",
-        foreign_keys=[verantwoordelijke_uuid],
+        foreign_keys=[verantwoordelijke_id],
         lazy="selectin",
     )
     opsteller: Mapped[Organisation | None] = relationship(
         "Organisation",
-        foreign_keys=[opsteller_uuid],
+        foreign_keys=[opsteller_id],
         lazy="selectin",
     )
-    eigenaar: Mapped[OrganisationMember | None] = relationship(
+    eigenaar: Mapped[OrganisationMember] = relationship(
         "OrganisationMember",
-        foreign_keys=[eigenaar_uuid],
+        foreign_keys=[eigenaar_id],
         lazy="selectin",
     )
     eigenaar_groep: Mapped[OrganisationUnit | None] = relationship(
         "OrganisationUnit",
-        foreign_keys=[eigenaar_groep_uuid],
+        foreign_keys=[eigenaar_groep_id],
         lazy="selectin",
     )
 
     # Many-to-many relationships
     informatie_categorieen: Mapped[list[InformationCategory]] = relationship(
         "InformationCategory",
-        secondary=publication_information_categories,
+        secondary=publication_categories,
         lazy="selectin",
     )
     onderwerpen: Mapped[list[Topic]] = relationship(
@@ -197,10 +198,9 @@ class Publication(Base, UUIDMixin, TimestampMixin, VersionMixin):
     )
 
     __table_args__ = (
-        # Publisher required when not in concept status
         CheckConstraint(
-            "publicatiestatus = 'concept' OR publisher_uuid IS NOT NULL",
-            name="publication_publisher_required_when_published",
+            "publicatiestatus = 'concept' OR publicatiestatus = '' OR publisher_id IS NOT NULL",
+            name="publisher_null_only_for_concept_or_blank",
         ),
     )
 
@@ -217,30 +217,15 @@ class Publication(Base, UUIDMixin, TimestampMixin, VersionMixin):
         """Check if publication is in revoked state."""
         return self.publicatiestatus == PublicationStatus.INGETROKKEN.value
 
-    @property
-    def can_publish(self) -> bool:
-        """Check if publication can be published."""
-        return self.publicatiestatus in (
-            PublicationStatus.CONCEPT.value,
-            "",
-        )
 
-    @property
-    def can_revoke(self) -> bool:
-        """Check if publication can be revoked."""
-        return self.publicatiestatus == PublicationStatus.GEPUBLICEERD.value
-
-
-class PublicationIdentifier(Base):
+class PublicationIdentifier(Base, IDMixin):
     """Additional identifiers for a publication."""
 
-    __tablename__ = "publication_identifier"
+    __tablename__ = "publications_publicationidentifier"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    publicatie_uuid: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("publication.uuid", ondelete="CASCADE"),
+    publicatie_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("publications_publication.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -252,58 +237,40 @@ class PublicationIdentifier(Base):
         back_populates="identifiers",
     )
 
-    __table_args__ = (
-        UniqueConstraint(
-            "publicatie_uuid",
-            "kenmerk",
-            "bron",
-            name="publication_identifier_unique",
-        ),
-    )
-
     def __repr__(self) -> str:
         return f"<PublicationIdentifier(kenmerk={self.kenmerk}, bron={self.bron})>"
 
 
-class Document(Base, UUIDMixin, TimestampMixin, VersionMixin):
+class Document(Base, IDMixin, UUIDMixin, TimestampMixin):
     """Document model - belongs to a publication."""
 
-    __tablename__ = "document"
+    __tablename__ = "publications_document"
 
     # Parent publication
-    publicatie_uuid: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("publication.uuid", ondelete="CASCADE"),
+    publicatie_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("publications_publication.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
+
+    # Owner
+    eigenaar_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("accounts_organisationmember.id"),
+        nullable=False,
+    )
+
+    # Legacy identifier (deprecated but kept for compatibility)
+    identifier: Mapped[str] = mapped_column(String(255), nullable=False, default="")
 
     # Titles and description
     officiele_titel: Mapped[str] = mapped_column(String(255), nullable=False)
-    verkorte_titel: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    omschrijving: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-    # Status - managed by state machine
-    publicatiestatus: Mapped[str] = mapped_column(
-        String(12),
-        default=PublicationStatus.CONCEPT.value,
-        nullable=False,
-        index=True,
-    )
-
-    # File metadata
-    bestandsformaat: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    bestandsnaam: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    bestandsomvang: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-
-    # Source URL if document originates from Documents API
-    source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-
-    # Legacy identifier (deprecated but kept for compatibility)
-    identifier: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    verkorte_titel: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    omschrijving: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     # Date fields
-    creatiedatum: Mapped[date | None] = mapped_column(Date, nullable=True)
+    creatiedatum: Mapped[date] = mapped_column(Date, nullable=False)
     ontvangstdatum: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
@@ -321,19 +288,38 @@ class Document(Base, UUIDMixin, TimestampMixin, VersionMixin):
         nullable=True,
     )
 
+    # File metadata
+    bestandsformaat: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    bestandsnaam: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    bestandsomvang: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+
+    # Source URL if document originates from Documents API
+    source_url: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
+
+    # Status
+    publicatiestatus: Mapped[str] = mapped_column(
+        String(12),
+        default=PublicationStatus.CONCEPT.value,
+        nullable=False,
+        index=True,
+    )
+
     # OpenZaak Documents API integration
-    document_service_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    document_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
+    document_service_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("zgw_consumers_service.id"),
         nullable=True,
     )
-    lock: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    document_uuid: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        nullable=True,
+    )
+    lock: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     upload_complete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # Owner
-    eigenaar_uuid: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("organisation_member.uuid"),
+    # Metadata strip timestamp
+    metadata_gestript_op: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
 
@@ -342,9 +328,9 @@ class Document(Base, UUIDMixin, TimestampMixin, VersionMixin):
         "Publication",
         back_populates="documenten",
     )
-    eigenaar: Mapped[OrganisationMember | None] = relationship(
+    eigenaar: Mapped[OrganisationMember] = relationship(
         "OrganisationMember",
-        foreign_keys=[eigenaar_uuid],
+        foreign_keys=[eigenaar_id],
         lazy="selectin",
     )
 
@@ -357,11 +343,14 @@ class Document(Base, UUIDMixin, TimestampMixin, VersionMixin):
     )
 
     __table_args__ = (
-        # Both document_service_url and document_uuid must be set or both null
         CheckConstraint(
-            "(document_service_url IS NULL AND document_uuid IS NULL) OR "
-            "(document_service_url IS NOT NULL AND document_uuid IS NOT NULL)",
-            name="document_service_both_or_neither",
+            "(document_service_id IS NULL AND document_uuid IS NULL) OR "
+            "(document_service_id IS NOT NULL AND document_uuid IS NOT NULL)",
+            name="documents_api_reference",
+        ),
+        CheckConstraint(
+            "bestandsomvang >= 0",
+            name="publications_document_bestandsomvang_check",
         ),
     )
 
@@ -376,19 +365,17 @@ class Document(Base, UUIDMixin, TimestampMixin, VersionMixin):
     @property
     def has_openzaak_document(self) -> bool:
         """Check if document is registered in OpenZaak."""
-        return self.document_service_url is not None and self.document_uuid is not None
+        return self.document_service_id is not None and self.document_uuid is not None
 
 
-class DocumentIdentifier(Base):
+class DocumentIdentifier(Base, IDMixin):
     """Additional identifiers for a document."""
 
-    __tablename__ = "document_identifier"
+    __tablename__ = "publications_documentidentifier"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-
-    document_uuid: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("document.uuid", ondelete="CASCADE"),
+    document_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("publications_document.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -398,15 +385,6 @@ class DocumentIdentifier(Base):
     document: Mapped[Document] = relationship(
         "Document",
         back_populates="identifiers",
-    )
-
-    __table_args__ = (
-        UniqueConstraint(
-            "document_uuid",
-            "kenmerk",
-            "bron",
-            name="document_identifier_unique",
-        ),
     )
 
     def __repr__(self) -> str:

@@ -17,6 +17,10 @@ RUN uv sync --frozen --no-dev || uv sync --no-dev
 # Copy application code
 COPY src/ ./src/
 
+# Copy alembic for migrations
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
+
 # Test stage (for running tests in Docker)
 FROM builder AS test
 
@@ -59,6 +63,10 @@ COPY --from=builder --chown=gpp-app:gpp-app /app/.venv /app/.venv
 
 # Copy application code
 COPY --from=builder --chown=gpp-app:gpp-app /app/src ./src
+
+# Copy alembic for migrations
+COPY --from=builder --chown=gpp-app:gpp-app /app/alembic.ini ./
+COPY --from=builder --chown=gpp-app:gpp-app /app/alembic ./alembic
 
 # Set environment
 ENV PATH="/app/.venv/bin:$PATH" \

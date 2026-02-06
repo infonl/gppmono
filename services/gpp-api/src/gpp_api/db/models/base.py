@@ -22,13 +22,20 @@ class Base(DeclarativeBase):
         return "".join(["_" + c.lower() if c.isupper() else c for c in name]).lstrip("_")
 
 
+class IDMixin:
+    """Mixin that adds an auto-incrementing bigint primary key (Django style)."""
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+
+
 class UUIDMixin:
-    """Mixin that adds a UUID primary key."""
+    """Mixin that adds a UUID unique column (Django style - separate from PK)."""
 
     uuid: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        primary_key=True,
+        unique=True,
         default=uuid.uuid4,
+        nullable=False,
         index=True,
     )
 

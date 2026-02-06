@@ -20,17 +20,17 @@ default:
 # MAIN COMMANDS
 # =============================================================================
 
-# Start all services (full stack)
+# Start infrastructure services only (postgres, redis, openzaak, publicatiebank)
 up *ARGS:
     docker compose up {{ARGS}}
 
-# Start all services in background
+# Start infrastructure in background
 up-d:
     docker compose up -d
 
-# Stop all services
+# Stop all services (all profiles)
 down:
-    docker compose down
+    docker compose --profile legacy --profile fastapi down
 
 # Stop all services and remove volumes (clean slate)
 down-v:
@@ -62,9 +62,9 @@ up-deps:
 up-woo-hoo:
     docker compose up -d woo-hoo
 
-# Start gpp-app only (requires deps to be running)
+# Start gpp-app only (requires deps to be running) [LEGACY]
 up-gpp-app:
-    docker compose up -d gpp-app
+    docker compose --profile legacy up -d gpp-app
 
 # =============================================================================
 # DEVELOPMENT MODE
@@ -217,13 +217,13 @@ test-woo-hoo-cov:
 # BUILD & LINT
 # =============================================================================
 
-# Build all Docker images
+# Build all Docker images (both legacy and fastapi)
 build:
-    docker compose build
+    docker compose --profile legacy --profile fastapi build
 
-# Build specific service
+# Build specific service [LEGACY]
 build-gpp-app:
-    docker compose build gpp-app
+    docker compose --profile legacy build gpp-app
 
 build-woo-hoo:
     docker compose build woo-hoo
@@ -361,12 +361,14 @@ seed-local-dev:
 # LOCAL DEVELOPMENT - SINGLE COMMAND
 # =============================================================================
 
-# Start entire stack for local development (the main command you'll use)
+# Start entire stack for local development with LEGACY .NET backend
 local *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "=== GPP Local Development ==="
+    echo "=== GPP Local Development (Legacy .NET Architecture) ==="
+    echo ""
+    echo "Note: For the new FastAPI architecture, use 'just local-fastapi'"
     echo ""
 
     # Ensure .env exists
@@ -388,13 +390,13 @@ local *ARGS:
     # Build if images don't exist
     if ! docker images | grep -q "gppmono-gpp-app" 2>/dev/null; then
         echo "Building Docker images (first run, this takes a while)..."
-        docker compose build
+        docker compose --profile legacy build
         echo ""
     fi
 
-    # Start everything
+    # Start everything with legacy profile
     echo "Starting all services..."
-    docker compose up -d {{ARGS}}
+    docker compose --profile legacy up -d {{ARGS}}
 
     echo ""
     echo "Waiting for services to be healthy..."
@@ -523,11 +525,15 @@ local *ARGS:
     echo ""
 
 # =============================================================================
-# QUICK START (alias for local)
+# QUICK START
 # =============================================================================
 
-# First-time setup: create .env, build, and start (alias for 'local')
+# Quick start with NEW FastAPI architecture (recommended)
 quickstart:
+    @just local-fastapi
+
+# Quick start with legacy .NET architecture
+quickstart-legacy:
     @just local
 
 # =============================================================================
@@ -648,11 +654,27 @@ local-fastapi *ARGS:
         if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
     done
 
-    # Run migrations for gpp-api
+    # Ensure databases exist (in case postgres volume was created before init script)
     echo ""
-    echo "Running database migrations..."
-    docker compose exec -T gpp-api alembic upgrade head 2>/dev/null || echo "  ⚠️  gpp-api migrations skipped (may need manual run)"
-    docker compose exec -T gpp-app-fastapi alembic upgrade head 2>/dev/null || echo "  ⚠️  gpp-app-fastapi migrations skipped (may need manual run)"
+    echo "Ensuring databases exist..."
+    docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE gpp_api;" 2>/dev/null || true
+    docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE gpp_app_fastapi;" 2>/dev/null || true
+
+    # Load fixtures for gpp_app_fastapi (creates tables and seeds data)
+    echo "Loading fixtures..."
+    docker compose exec -T postgres psql -U postgres -d gpp_app_fastapi -f /dev/stdin < ./services/gpp-app-fastapi/fixtures/001_seed_data.sql 2>/dev/null || true
+    echo "  ✓ gpp_app_fastapi fixtures loaded"
+
+    # Enable test organisation in publicatiebank
+    docker compose exec -T postgres psql -U postgres -d woo_publications -c "
+        UPDATE metadata_organisation SET is_actief = true WHERE uuid = '5e1e724c-c3ea-4d0a-aa79-d0b66aefe27c';
+    " > /dev/null 2>&1 || true
+    echo "  ✓ Test organisation enabled"
+
+    # Load OpenZaak fixtures
+    docker compose exec -T openzaak python /app/src/manage.py loaddata /app/fixtures/configuration.json > /dev/null 2>&1 || true
+    docker compose exec -T openzaak python /app/src/manage.py loaddata /app/fixtures/catalogi.json > /dev/null 2>&1 || true
+    echo "  ✓ OpenZaak fixtures loaded"
 
     echo ""
     echo "=== FastAPI Local Development Ready ==="
@@ -703,6 +725,49 @@ health-fastapi:
 # Build FastAPI services
 build-fastapi:
     docker compose --profile fastapi build
+
+# Load/reload fixtures for FastAPI local dev
+fixtures-fastapi:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Loading FastAPI fixtures..."
+
+    # Ensure databases exist
+    docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE gpp_api;" 2>/dev/null || true
+    docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE gpp_app_fastapi;" 2>/dev/null || true
+
+    # Load gpp_app_fastapi fixtures
+    docker compose exec -T postgres psql -U postgres -d gpp_app_fastapi -f /dev/stdin < ./services/gpp-app-fastapi/fixtures/001_seed_data.sql
+    echo "  ✓ gpp_app_fastapi fixtures loaded"
+
+    # Enable test organisation
+    docker compose exec -T postgres psql -U postgres -d woo_publications -c "
+        UPDATE metadata_organisation SET is_actief = true WHERE uuid = '5e1e724c-c3ea-4d0a-aa79-d0b66aefe27c';
+    " > /dev/null 2>&1 || true
+    echo "  ✓ Test organisation enabled"
+
+    # Load OpenZaak fixtures
+    docker compose exec -T openzaak python /app/src/manage.py loaddata /app/fixtures/configuration.json > /dev/null 2>&1 || true
+    docker compose exec -T openzaak python /app/src/manage.py loaddata /app/fixtures/catalogi.json > /dev/null 2>&1 || true
+    echo "  ✓ OpenZaak fixtures loaded"
+
+    echo ""
+    echo "Fixtures loaded successfully!"
+
+# Reset FastAPI databases (drop and recreate)
+reset-fastapi-db:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "⚠️  This will DROP and recreate gpp_api and gpp_app_fastapi databases!"
+    read -p "Are you sure? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        docker compose exec -T postgres psql -U postgres -c "DROP DATABASE IF EXISTS gpp_api;"
+        docker compose exec -T postgres psql -U postgres -c "DROP DATABASE IF EXISTS gpp_app_fastapi;"
+        docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE gpp_api;"
+        docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE gpp_app_fastapi;"
+        echo "Databases recreated. Run 'just fixtures-fastapi' to load seed data."
+    fi
 
 # View logs for FastAPI services
 logs-fastapi *ARGS:

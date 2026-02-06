@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Frontend builder - builds Vue.js app from odpc.client using Bun
+# Frontend + Caddy - builds Vue.js and serves via Caddy
 
 FROM oven/bun:1-alpine AS builder
 
@@ -14,48 +14,45 @@ RUN bun install --frozen-lockfile || bun install
 # Copy source
 COPY . .
 
-# Build for production (vue-tsc + vite build)
+# Build for production
 RUN bun run build-only
 
-# Production stage - serve with nginx
-FROM nginx:alpine AS production
+# Production stage - Caddy serves the static files
+FROM caddy:2-alpine AS production
 
-# Copy nginx config for SPA
-RUN rm /etc/nginx/conf.d/default.conf
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 80;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
+# Copy built assets
+COPY --from=builder /app/dist /srv
 
-    # Gzip compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-    # Cache hashed assets for long time
-    location ~* \.[0-9a-f]{8}\.(js|css)$ {
-        expires 100d;
-        add_header Cache-Control "public, immutable";
+# Caddyfile for SPA serving with API proxy
+COPY <<EOF /etc/caddy/Caddyfile
+:80 {
+    # API v2 routes go to gpp-api (data backend)
+    handle /api/v2/* {
+        reverse_proxy gpp-api:8000
     }
 
-    # Cache other static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-        expires 7d;
-        add_header Cache-Control "public";
+    # API v1 and auth routes go to gpp-app-fastapi (BFF)
+    handle /api/* {
+        reverse_proxy gpp-app-fastapi:8000
     }
 
-    # SPA fallback - serve index.html for all routes
-    location / {
-        try_files \$uri \$uri/ /index.html;
-        add_header Cache-Control "no-cache";
+    # Serve static files
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
     }
+
+    # Cache hashed assets
+    @hashed path_regexp hash .*-[a-zA-Z0-9]{8}\.(js|css)$
+    header @hashed Cache-Control "public, max-age=8640000, immutable"
+
+    # No cache for index.html
+    @html path *.html /
+    header @html Cache-Control "no-cache"
 }
 EOF
 
-# Copy built assets from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
-
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
