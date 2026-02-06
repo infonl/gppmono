@@ -83,9 +83,9 @@ def _compute_aggregated_confidence(document_suggestions: list[DocumentMetadataSu
         FieldConfidence(
             field_name=name,
             confidence=sum(scores) / len(scores),
-            reasoning=f"Averaged from {len(scores)} document(s)" if len(scores) > 1 else (
-                field_reasoning[name][0] if field_reasoning[name] else None
-            ),
+            reasoning=f"Averaged from {len(scores)} document(s)"
+            if len(scores) > 1
+            else (field_reasoning[name][0] if field_reasoning[name] else None),
         )
         for name, scores in sorted(field_scores.items())
     ]

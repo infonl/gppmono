@@ -529,3 +529,181 @@ local *ARGS:
 # First-time setup: create .env, build, and start (alias for 'local')
 quickstart:
     @just local
+
+# =============================================================================
+# NEW FASTAPI ARCHITECTURE
+# =============================================================================
+
+# Start new FastAPI architecture (gpp-api + gpp-app-fastapi + frontend via Caddy)
+up-fastapi *ARGS:
+    docker compose --profile fastapi up {{ARGS}}
+
+# Start FastAPI architecture in detached mode
+up-fastapi-d:
+    docker compose --profile fastapi up -d
+
+# Start FastAPI dev mode (Vue hot reload on port 5173)
+up-fastapi-dev:
+    docker compose --profile fastapi-dev up -d gpp-api gpp-app-fastapi gpp-frontend-dev
+
+# Start FastAPI combined mode (single container with embedded frontend)
+up-fastapi-combined:
+    docker compose --profile fastapi-combined up -d
+
+# Full local dev with new FastAPI architecture
+local-fastapi *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "=== GPP Local Development (FastAPI Architecture) ==="
+    echo ""
+
+    # Ensure .env exists
+    if [ ! -f .env ]; then
+        echo "Creating .env from .env.example..."
+        cp .env.example .env
+        echo "⚠️  Created .env - you may need to add OPENROUTER_API_KEY"
+        echo ""
+    fi
+
+    # Build if images don't exist
+    if ! docker images | grep -q "gppmono-gpp-api" 2>/dev/null; then
+        echo "Building Docker images (first run, this takes a while)..."
+        docker compose --profile fastapi build
+        echo ""
+    fi
+
+    # Start infrastructure first
+    echo "Starting infrastructure..."
+    docker compose up -d postgres redis
+
+    # Wait for postgres
+    echo -n "  PostgreSQL: "
+    for i in {1..30}; do
+        if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for redis
+    echo -n "  Redis: "
+    for i in {1..10}; do
+        if docker compose exec -T redis redis-cli ping > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 10 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Start FastAPI services
+    echo ""
+    echo "Starting FastAPI services..."
+    docker compose --profile fastapi up -d {{ARGS}}
+
+    # Wait for gpp-api
+    echo -n "  gpp-api: "
+    for i in {1..60}; do
+        if curl -sf http://localhost:8004/health > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 2
+        if [ $i -eq 60 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for gpp-app-fastapi
+    echo -n "  gpp-app-fastapi: "
+    for i in {1..60}; do
+        if curl -sf http://localhost:8005/health > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 2
+        if [ $i -eq 60 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for frontend
+    echo -n "  gpp-frontend: "
+    for i in {1..30}; do
+        if curl -sf http://localhost:3000/ > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Wait for caddy
+    echo -n "  Caddy: "
+    for i in {1..30}; do
+        if curl -sf http://localhost:8080/caddy-health > /dev/null 2>&1; then
+            echo "✓"
+            break
+        fi
+        sleep 1
+        if [ $i -eq 30 ]; then echo "✗ (timeout)"; fi
+    done
+
+    # Run migrations for gpp-api
+    echo ""
+    echo "Running database migrations..."
+    docker compose exec -T gpp-api alembic upgrade head 2>/dev/null || echo "  ⚠️  gpp-api migrations skipped (may need manual run)"
+    docker compose exec -T gpp-app-fastapi alembic upgrade head 2>/dev/null || echo "  ⚠️  gpp-app-fastapi migrations skipped (may need manual run)"
+
+    echo ""
+    echo "=== FastAPI Local Development Ready ==="
+    echo ""
+    echo "Access URLs:"
+    echo "  📱 Main App (Caddy):     http://localhost:8080"
+    echo "  🔧 gpp-api direct:       http://localhost:8004/docs"
+    echo "  🔧 gpp-app-fastapi:      http://localhost:8005/docs"
+    echo "  🎨 Frontend direct:      http://localhost:3000"
+    echo ""
+    echo "Commands:"
+    echo "  just logs gpp-api           # View gpp-api logs"
+    echo "  just logs gpp-app-fastapi   # View gpp-app logs"
+    echo "  just logs caddy             # View caddy logs"
+    echo "  just health-fastapi         # Check service health"
+    echo "  just down                   # Stop everything"
+    echo ""
+
+# Health check for FastAPI services
+health-fastapi:
+    @echo "=== FastAPI Services Health Check ==="
+    @echo ""
+    @echo "1. PostgreSQL:"
+    @docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1 && echo "   ✓ Healthy" || echo "   ✗ Not ready"
+    @echo ""
+    @echo "2. Redis:"
+    @docker compose exec -T redis redis-cli ping > /dev/null 2>&1 && echo "   ✓ Healthy" || echo "   ✗ Not ready"
+    @echo ""
+    @echo "3. gpp-api (port 8004):"
+    @curl -sf http://localhost:8004/health > /dev/null 2>&1 && echo "   ✓ Healthy" || echo "   ✗ Not responding"
+    @echo ""
+    @echo "4. gpp-app-fastapi (port 8005):"
+    @curl -sf http://localhost:8005/health > /dev/null 2>&1 && echo "   ✓ Healthy" || echo "   ✗ Not responding"
+    @echo ""
+    @echo "5. gpp-frontend (port 3000):"
+    @curl -sf http://localhost:3000/ > /dev/null 2>&1 && echo "   ✓ Healthy" || echo "   ✗ Not responding"
+    @echo ""
+    @echo "6. Caddy (port 8080):"
+    @curl -sf http://localhost:8080/caddy-health > /dev/null 2>&1 && echo "   ✓ Healthy" || echo "   ✗ Not responding"
+    @echo ""
+    @echo "=== Access URLs ==="
+    @echo "Main app (via Caddy):  http://localhost:8080"
+    @echo "gpp-api docs:          http://localhost:8004/docs"
+    @echo "gpp-app-fastapi docs:  http://localhost:8005/docs"
+    @echo "Frontend direct:       http://localhost:3000"
+    @echo ""
+
+# Build FastAPI services
+build-fastapi:
+    docker compose --profile fastapi build
+
+# View logs for FastAPI services
+logs-fastapi *ARGS:
+    docker compose --profile fastapi logs -f {{ARGS}}

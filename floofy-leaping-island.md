@@ -4,6 +4,7 @@
 
 Replace the existing Django (publicatiebank) and C#/.NET (gpp-app) backends with two FastAPI microservices.
 
+ alway smake sure ebverything has good etst coverage for python use pytest and functional style not unittest with testcase classes. use pytest fixtures and pytest async where elegant. make sure everything has good etst coverage and is formattetd with ruff and uses uv and all is wrapped in just files and docker compose files.
 ### Target Architecture
 
 ```

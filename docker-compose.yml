@@ -289,6 +289,239 @@ services:
       retries: 5
       start_period: 10s
 
+  # =============================================================================
+  # GPP-API (FastAPI) - New Publication Backend
+  # Replaces publicatiebank (Django) for the new architecture
+  # =============================================================================
+
+  gpp-api:
+    profiles: ["fastapi", "new"]
+    build:
+      context: ./services/gpp-api
+      dockerfile: Dockerfile
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://postgres:localdev@postgres:5432/gpp_api
+      DB_ECHO: "false"
+      # Redis
+      REDIS_URL: redis://redis:6379/3
+      # OpenZaak Integration
+      OPENZAAK_DOCUMENTS_API_URL: http://openzaak:8000/documenten/api/v1
+      OPENZAAK_CATALOGI_API_URL: http://openzaak:8000/catalogi/api/v1
+      OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-}
+      OPENZAAK_SECRET: ${OPENZAAK_SECRET:-}
+      # GPP Zoeken (Search)
+      GPP_ZOEKEN_URL: ${GPP_ZOEKEN_URL:-}
+      GPP_ZOEKEN_API_KEY: ${GPP_ZOEKEN_API_KEY:-}
+      # Application
+      APP_NAME: gpp-api
+      APP_URL: http://localhost:8004
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+      LOG_FORMAT: console
+      # API Keys (comma-separated)
+      API_KEYS: ${GPP_API_KEYS:-insecure-gpp-api-dev-key}
+    ports:
+      - "8004:8000"
+    volumes:
+      - gpp-api-logs:/app/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  gpp-api-worker:
+    profiles: ["fastapi", "new"]
+    build:
+      context: ./services/gpp-api
+      dockerfile: Dockerfile
+    command: ["python", "-m", "gpp_api.workers"]
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://postgres:localdev@postgres:5432/gpp_api
+      # Redis
+      REDIS_URL: redis://redis:6379/3
+      # OpenZaak Integration
+      OPENZAAK_DOCUMENTS_API_URL: http://openzaak:8000/documenten/api/v1
+      OPENZAAK_CATALOGI_API_URL: http://openzaak:8000/catalogi/api/v1
+      OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-}
+      OPENZAAK_SECRET: ${OPENZAAK_SECRET:-}
+      # GPP Zoeken (Search)
+      GPP_ZOEKEN_URL: ${GPP_ZOEKEN_URL:-}
+      GPP_ZOEKEN_API_KEY: ${GPP_ZOEKEN_API_KEY:-}
+      # Logging
+      LOG_LEVEL: INFO
+      LOG_FORMAT: console
+    volumes:
+      - gpp-api-logs:/app/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # GPP-APP-FASTAPI - New BFF (Backend for Frontend)
+  # Replaces gpp-app (C#/.NET) for the new architecture
+  # =============================================================================
+
+  gpp-app-fastapi:
+    profiles: ["fastapi", "new"]
+    build:
+      context: ./services/gpp-app-fastapi
+      dockerfile: Dockerfile
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://postgres:localdev@postgres:5432/gpp_app_fastapi
+      DB_ECHO: "false"
+      # GPP API Backend
+      GPP_API_BASE_URL: http://gpp-api:8000
+      GPP_API_TOKEN: ${GPP_API_KEYS:-insecure-gpp-api-dev-key}
+      # woo-hoo Integration
+      WOO_HOO_BASE_URL: http://woo-hoo:8000
+      WOO_HOO_HEALTH_TIMEOUT_SECONDS: 30
+      WOO_HOO_GENERATE_TIMEOUT_SECONDS: 120
+      # OIDC - NOT SET for dev auto-login
+      OIDC_ADMIN_ROLE: odpc-admin
+      # Session
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:-dev-session-secret-key-change-in-production-minimum-32-chars}
+      # Application
+      APP_NAME: gpp-app
+      APP_URL: http://localhost:8005
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+      LOG_FORMAT: console
+    ports:
+      - "8005:8000"
+    volumes:
+      - gpp-app-fastapi-logs:/app/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gpp-api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # =============================================================================
+  # GPP-APP-COMBINED - FastAPI BFF with embedded Vue.js frontend
+  # Single container serving both API and frontend - simpler deployment
+  # =============================================================================
+
+  gpp-app-combined:
+    profiles: ["fastapi-combined"]
+    build:
+      context: ./services
+      dockerfile: ../docker/gpp-app-combined/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:localdev@postgres:5432/gpp_app_fastapi
+      DB_ECHO: "false"
+      GPP_API_BASE_URL: http://gpp-api:8000
+      GPP_API_TOKEN: ${GPP_API_KEYS:-insecure-gpp-api-dev-key}
+      WOO_HOO_BASE_URL: http://woo-hoo:8000
+      WOO_HOO_HEALTH_TIMEOUT_SECONDS: 30
+      WOO_HOO_GENERATE_TIMEOUT_SECONDS: 120
+      OIDC_ADMIN_ROLE: odpc-admin
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:-dev-session-secret-key-change-in-production-minimum-32-chars}
+      APP_NAME: gpp-app
+      APP_URL: http://localhost:8006
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+      LOG_FORMAT: console
+    ports:
+      - "8006:8000"  # Different port to allow running alongside other services
+    volumes:
+      - gpp-app-fastapi-logs:/app/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gpp-api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # =============================================================================
+  # GPP-FRONTEND - Vue.js SPA (from odpc.client)
+  # Serves the Vue.js frontend for the new FastAPI architecture
+  # =============================================================================
+
+  gpp-frontend:
+    profiles: ["fastapi", "new"]
+    build:
+      context: ./services/gpp-app/odpc.client
+      dockerfile: ../../../docker/frontend/Dockerfile
+    ports:
+      - "3000:80"  # Direct access for local dev (bypass Caddy)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Vue.js dev server with hot reload - use this for frontend development
+  gpp-frontend-dev:
+    profiles: ["fastapi-dev"]
+    image: oven/bun:1-alpine
+    working_dir: /app
+    volumes:
+      - ./services/gpp-app/odpc.client:/app
+      - /app/node_modules  # Anonymous volume to avoid overwriting node_modules
+    ports:
+      - "5173:5173"  # Vite dev server
+    environment:
+      - VITE_API_TARGET=http://gpp-app-fastapi:8000
+      - VITE_APP_TITLE=GPP Publiceren (Dev)
+    command: sh -c "bun install && bun run dev"
+    depends_on:
+      - gpp-app-fastapi
+
+  # =============================================================================
+  # CADDY - Reverse Proxy for new FastAPI architecture
+  # =============================================================================
+
+  caddy:
+    profiles: ["fastapi", "new"]
+    image: caddy:2-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      gpp-api:
+        condition: service_healthy
+      gpp-app-fastapi:
+        condition: service_healthy
+      gpp-frontend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/caddy-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
 # =============================================================================
 # VOLUMES
 # =============================================================================
@@ -301,3 +534,7 @@ volumes:
   publicatiebank-media:
   publicatiebank-log:
   woo-hoo-logs:
+  gpp-api-logs:
+  gpp-app-fastapi-logs:
+  caddy-data:
+  caddy-config:
