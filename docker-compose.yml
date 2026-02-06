@@ -309,7 +309,8 @@ services:
       REDIS_URL: redis://redis:6379/3
       # OpenZaak Integration
       OPENZAAK_DOCUMENTS_API_URL: http://openzaak:8000/documenten/api/v1
-      OPENZAAK_CATALOGI_API_URL: http://openzaak:8000/catalogi/api/v1
+      # Note: Catalogi URL must match OpenZaak's configured OPENZAAK_DOMAIN for URL validation
+      OPENZAAK_CATALOGI_API_URL: http://openzaak.docker.internal:8001/catalogi/api/v1
       OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-woo-publications-dev}
       OPENZAAK_SECRET: ${OPENZAAK_SECRET:-insecure-yQL9Rzh4eHGVmYx5w3J2gu}
       # GPP Zoeken (Search)
@@ -353,7 +354,7 @@ services:
       REDIS_URL: redis://redis:6379/3
       # OpenZaak Integration
       OPENZAAK_DOCUMENTS_API_URL: http://openzaak:8000/documenten/api/v1
-      OPENZAAK_CATALOGI_API_URL: http://openzaak:8000/catalogi/api/v1
+      OPENZAAK_CATALOGI_API_URL: http://openzaak.docker.internal:8001/catalogi/api/v1
       OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-woo-publications-dev}
       OPENZAAK_SECRET: ${OPENZAAK_SECRET:-insecure-yQL9Rzh4eHGVmYx5w3J2gu}
       # GPP Zoeken (Search)

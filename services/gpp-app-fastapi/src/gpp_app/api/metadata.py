@@ -31,11 +31,18 @@ class MetadataGenerateRequest(BaseModel):
     document_uuid: str
 
 
+class MetadataSuggestion(BaseModel):
+    """Metadata suggestion from woo-hoo."""
+
+    metadata: dict
+
+
 class MetadataGenerateResponse(BaseModel):
-    """Response from metadata generation."""
+    """Response from metadata generation - matches woo-hoo format for frontend compatibility."""
 
     success: bool
-    metadata: dict | None = None
+    request_id: str | None = None
+    suggestion: MetadataSuggestion | None = None
     error: str | None = None
 
 
@@ -127,9 +134,15 @@ async def generate_metadata(
                 success=data.get("success"),
             )
 
+            # Preserve woo-hoo's response format for frontend compatibility
+            suggestion = None
+            if data.get("suggestion") and data["suggestion"].get("metadata"):
+                suggestion = MetadataSuggestion(metadata=data["suggestion"]["metadata"])
+
             return MetadataGenerateResponse(
                 success=data.get("success", False),
-                metadata=data.get("suggestion", {}).get("metadata"),
+                request_id=data.get("request_id"),
+                suggestion=suggestion,
                 error=data.get("error"),
             )
 
@@ -142,6 +155,8 @@ async def generate_metadata(
         )
         return MetadataGenerateResponse(
             success=False,
+            request_id=None,
+            suggestion=None,
             error=f"HTTP error: {e.response.status_code}",
         )
 
@@ -153,6 +168,8 @@ async def generate_metadata(
         )
         return MetadataGenerateResponse(
             success=False,
+            request_id=None,
+            suggestion=None,
             error=str(e),
         )
 

@@ -241,9 +241,15 @@ class OpenZaakClient:
         response.raise_for_status()
 
         data = response.json()
+        logger.info("openzaak_create_response", status=response.status_code)
+
+        # Extract UUID from URL (e.g. .../enkelvoudiginformatieobjecten/UUID)
+        url = data["url"]
+        doc_uuid = uuid.UUID(url.rstrip("/").split("/")[-1])
+
         return OpenZaakDocument(
-            url=data["url"],
-            uuid=uuid.UUID(data["uuid"]),
+            url=url,
+            uuid=doc_uuid,
             identificatie=data["identificatie"],
             bronorganisatie=data["bronorganisatie"],
             creatiedatum=data["creatiedatum"],

@@ -475,8 +475,9 @@ async def update_publication(
         if topic:
             pub.onderwerpen.append(topic)
 
-    # Update identifiers
+    # Update identifiers - must flush after clear to avoid unique constraint violation
     pub.identifiers.clear()
+    await db.flush()  # Delete old identifiers before inserting new ones
     for kenmerk in body.kenmerken:
         pub.identifiers.append(
             PublicationIdentifier(kenmerk=kenmerk.kenmerk, bron=kenmerk.bron)

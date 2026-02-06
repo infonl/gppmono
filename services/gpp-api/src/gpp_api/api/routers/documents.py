@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import math
 import uuid as uuid_module
 from datetime import datetime, date, timezone
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
@@ -15,14 +16,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from gpp_api.api.deps import get_db
-from gpp_api.services.openzaak import OpenZaakClient, OpenZaakError
+from gpp_api.config import get_settings
+from gpp_api.services.openzaak import OpenZaakClient, OpenZaakError, OpenZaakValidationError
 from gpp_api.db.models import (
     Document,
     DocumentIdentifier,
     Publication,
     PublicationStatus,
     OrganisationMember,
+    InformationCategory,
 )
+from gpp_api.utils.logging import get_logger
+
+logger = get_logger(__name__)
+
+# Chunk size for file uploads (10MB)
+FILE_PART_SIZE = 10 * 1024 * 1024
 
 router = APIRouter()
 
@@ -54,6 +63,40 @@ class BestandsdeelResponse(BaseModel):
     url: str
     volgnummer: int
     omvang: int
+
+
+def generate_bestandsdelen(doc_uuid: str, file_size: int) -> list[BestandsdeelResponse]:
+    """Generate bestandsdelen (file part) upload URLs for a document.
+
+    Args:
+        doc_uuid: Document UUID
+        file_size: Total file size in bytes
+
+    Returns:
+        List of BestandsdeelResponse with upload URLs
+    """
+    if file_size <= 0:
+        return []
+
+    settings = get_settings()
+    base_url = settings.app_url.rstrip("/")
+    num_parts = math.ceil(file_size / FILE_PART_SIZE)
+    parts = []
+
+    for i in range(num_parts):
+        part_uuid = str(uuid_module.uuid4())
+        start_offset = i * FILE_PART_SIZE
+        part_size = min(FILE_PART_SIZE, file_size - start_offset)
+
+        parts.append(
+            BestandsdeelResponse(
+                url=f"{base_url}/api/v2/documenten/{doc_uuid}/bestandsdelen/{part_uuid}",
+                volgnummer=i + 1,
+                omvang=part_size,
+            )
+        )
+
+    return parts
 
 
 class DocumentCreate(BaseModel):
@@ -230,10 +273,15 @@ async def create_document(
     db: Annotated[AsyncSession, Depends(get_db)],
     body: DocumentCreate = Body(...),
 ) -> DocumentResponse:
-    """Create a new document."""
-    now = datetime.now(timezone.utc)
+    """Create a new document.
 
-    # Look up publication
+    This creates the document metadata in the database and registers it with OpenZaak.
+    Returns bestandsdelen array with upload URLs for the actual file content.
+    """
+    now = datetime.now(timezone.utc)
+    settings = get_settings()
+
+    # Look up publication with information categories
     try:
         pub_uuid = uuid_module.UUID(body.publicatie)
     except ValueError:
@@ -243,7 +291,9 @@ async def create_document(
         )
 
     result = await db.execute(
-        select(Publication).where(Publication.uuid == pub_uuid)
+        select(Publication)
+        .options(selectinload(Publication.informatie_categorieen))
+        .where(Publication.uuid == pub_uuid)
     )
     publication = result.scalar_one_or_none()
 
@@ -277,9 +327,72 @@ async def create_document(
         except ValueError:
             pass
 
-    # Create document
+    # Generate document UUID
+    doc_uuid = uuid_module.uuid4()
+
+    # Register with OpenZaak Documents API
+    openzaak_uuid = None
+    openzaak_lock = ""
+
+    if settings.openzaak_client_id and settings.openzaak_secret:
+        # Get information category for informatieobjecttype
+        category = publication.informatie_categorieen[0] if publication.informatie_categorieen else None
+
+        if category:
+            openzaak_client = OpenZaakClient()
+            try:
+                # Construct informatieobjecttype URL
+                informatieobjecttype_url = openzaak_client.get_informatieobjecttype_url(category)
+
+                # Get organisation RSIN - use default if not available
+                bronorganisatie = "000000000"  # Default RSIN
+                if publication.publisher and publication.publisher.rsin:
+                    bronorganisatie = publication.publisher.rsin
+
+                # Create document in OpenZaak
+                # Note: OpenZaak returns the document already locked when bestandsomvang > 0
+                oz_doc = await openzaak_client.create_document(
+                    titel=body.officieleTitel,
+                    informatieobjecttype_url=informatieobjecttype_url,
+                    bronorganisatie=bronorganisatie,
+                    creatiedatum=creatiedatum.isoformat(),
+                    bestandsnaam=body.bestandsnaam,
+                    bestandsomvang=body.bestandsomvang,
+                    formaat=body.bestandsformaat,
+                    auteur="GPP",
+                    beschrijving=body.omschrijving,
+                    status="in_bewerking",  # Start with in_bewerking for upload
+                )
+
+                openzaak_uuid = str(oz_doc.uuid)
+                # Use the lock from the response - document is created pre-locked
+                openzaak_lock = oz_doc.lock
+
+                logger.info(
+                    "openzaak_document_created",
+                    doc_uuid=str(doc_uuid),
+                    openzaak_uuid=openzaak_uuid,
+                    lock=openzaak_lock,
+                )
+
+            except OpenZaakValidationError as e:
+                logger.error("openzaak_validation_error", error=str(e))
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"OpenZaak validation error: {e}",
+                )
+            except OpenZaakError as e:
+                logger.error("openzaak_error", error=str(e))
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"OpenZaak error: {e}",
+                )
+            finally:
+                await openzaak_client.close()
+
+    # Create document in database
     doc = Document(
-        uuid=uuid_module.uuid4(),
+        uuid=doc_uuid,
         publicatie=publication,
         eigenaar=eigenaar,
         officiele_titel=body.officieleTitel,
@@ -294,6 +407,11 @@ async def create_document(
         laatst_gewijzigd_datum=now,
         ontvangstdatum=ontvangstdatum,
         datum_ondertekend=datum_ondertekend,
+        # OpenZaak integration
+        document_uuid=openzaak_uuid,
+        lock=openzaak_lock,
+        upload_complete=False,
+        document_service_id=1 if openzaak_uuid else None,  # Placeholder service ID
     )
 
     # Add identifiers (kenmerken)
@@ -306,7 +424,14 @@ async def create_document(
     await db.commit()
     await db.refresh(doc)
 
-    return await get_document(doc.uuid, db)
+    # Generate bestandsdelen URLs for file upload
+    bestandsdelen = generate_bestandsdelen(str(doc.uuid), body.bestandsomvang)
+
+    # Return document with bestandsdelen
+    response = document_to_response(doc)
+    response.bestandsdelen = bestandsdelen
+
+    return response
 
 
 @router.put("/documenten/{doc_uuid}", response_model=DocumentResponse)
@@ -366,8 +491,9 @@ async def update_document(
     else:
         doc.datum_ondertekend = None
 
-    # Update identifiers
+    # Update identifiers - must flush after clear to avoid unique constraint violation
     doc.identifiers.clear()
+    await db.flush()  # Delete old identifiers before inserting new ones
     for kenmerk in body.kenmerken:
         doc.identifiers.append(
             DocumentIdentifier(kenmerk=kenmerk.kenmerk, bron=kenmerk.bron)
@@ -399,14 +525,25 @@ async def delete_document(
     await db.commit()
 
 
-@router.post("/documenten/{doc_uuid}/upload")
-async def upload_document_file(
+@router.put("/documenten/{doc_uuid}/bestandsdelen/{part_uuid}")
+async def upload_file_part(
     doc_uuid: uuid_module.UUID,
+    part_uuid: uuid_module.UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
+    inhoud: UploadFile = File(...),
 ) -> dict:
-    """Upload file content for a document.
+    """Upload a file part for a document.
 
-    TODO: Implement file upload via OpenZaak Documents API.
+    This receives multipart form data and uploads the file content to OpenZaak.
+    Once all parts are uploaded, the document is unlocked in OpenZaak.
+
+    Args:
+        doc_uuid: Document UUID
+        part_uuid: File part UUID (used for tracking)
+        inhoud: The file content to upload
+
+    Returns:
+        Document status information
     """
     result = await db.execute(
         select(Document).where(Document.uuid == doc_uuid)
@@ -419,7 +556,61 @@ async def upload_document_file(
             detail="Document not found",
         )
 
-    return {"uuid": str(doc_uuid), "status": "not_implemented"}
+    if not doc.document_uuid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document not registered with OpenZaak",
+        )
+
+    if not doc.lock:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document not locked for upload",
+        )
+
+    # Read file content
+    content = await inhoud.read()
+
+    logger.info(
+        "upload_file_part",
+        doc_uuid=str(doc_uuid),
+        part_uuid=str(part_uuid),
+        size=len(content),
+    )
+
+    # Upload to OpenZaak
+    openzaak_client = OpenZaakClient()
+    try:
+        settings = get_settings()
+        document_url = f"{settings.openzaak_documents_api_url}/enkelvoudiginformatieobjecten/{doc.document_uuid}"
+
+        await openzaak_client.upload_file_part(
+            document_url=document_url,
+            lock=doc.lock,
+            content=content,
+        )
+
+        # Mark upload as complete and unlock
+        await openzaak_client.unlock_document(document_url, doc.lock)
+
+        # Update document status
+        doc.upload_complete = True
+        doc.lock = ""
+        doc.metadata_gestript_op = datetime.now(timezone.utc)
+        await db.commit()
+
+        logger.info("upload_complete", doc_uuid=str(doc_uuid))
+
+        return {"uuid": str(doc_uuid), "status": "completed", "uploadComplete": True}
+
+    except OpenZaakError as e:
+        logger.error("upload_error", doc_uuid=str(doc_uuid), error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"OpenZaak upload error: {e}",
+        )
+    finally:
+        await openzaak_client.close()
 
 
 @router.get("/documenten/{doc_uuid}/download")

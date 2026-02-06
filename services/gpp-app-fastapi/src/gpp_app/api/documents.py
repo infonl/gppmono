@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
+import httpx
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi.responses import JSONResponse, Response
 
 from gpp_app.auth.oidc import OdpcUser, get_current_user
+from gpp_app.config import get_settings
 from gpp_app.services.gpp_api_client import GppApiClient, get_gpp_api_client
 
 router = APIRouter()
@@ -200,3 +202,69 @@ async def delete_document(
 
     finally:
         await client.close()
+
+
+@router.put("/documenten/{doc_uuid}/bestandsdelen/{part_uuid}")
+async def upload_file_part(
+    doc_uuid: str,
+    part_uuid: str,
+    request: Request,
+    user: Annotated[OdpcUser, Depends(get_current_user)],
+) -> Response:
+    """Upload a file part for a document.
+
+    Proxies the file upload to gpp-api which then uploads to OpenZaak.
+    Expects multipart/form-data with 'inhoud' file field.
+
+    Args:
+        doc_uuid: Document UUID
+        part_uuid: File part UUID
+        request: The incoming request with file data
+        user: Current user
+
+    Returns:
+        Upload status response
+    """
+    settings = get_settings()
+
+    # Read the multipart form data from the request
+    form = await request.form()
+    inhoud = form.get("inhoud")
+
+    if inhoud is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing 'inhoud' file field",
+        )
+
+    # Forward to gpp-api
+    async with httpx.AsyncClient(
+        base_url=settings.gpp_api_base_url,
+        timeout=300.0,  # 5 min timeout for large uploads
+    ) as client:
+        # Read file content
+        content = await inhoud.read()
+
+        # Create multipart form for gpp-api
+        files = {"inhoud": (inhoud.filename or "upload", content, inhoud.content_type or "application/octet-stream")}
+
+        response = await client.put(
+            f"/api/v2/documenten/{doc_uuid}/bestandsdelen/{part_uuid}",
+            files=files,
+            headers={
+                "Audit-User-ID": user.identifier,
+                "Audit-User-Representation": user.display_name,
+            },
+        )
+
+        if response.status_code == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found",
+            )
+
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            media_type="application/json",
+        )
