@@ -229,8 +229,8 @@ class PublicationIdentifier(Base, IDMixin):
         nullable=False,
     )
 
-    kenmerk: Mapped[str] = mapped_column(String(40), nullable=False)
-    bron: Mapped[str] = mapped_column(String(40), nullable=False)
+    kenmerk: Mapped[str] = mapped_column(String(255), nullable=False)
+    bron: Mapped[str] = mapped_column(String(100), nullable=False)
 
     publicatie: Mapped[Publication] = relationship(
         "Publication",
@@ -380,8 +380,8 @@ class DocumentIdentifier(Base, IDMixin):
         nullable=False,
     )
 
-    kenmerk: Mapped[str] = mapped_column(String(40), nullable=False)
-    bron: Mapped[str] = mapped_column(String(40), nullable=False)
+    kenmerk: Mapped[str] = mapped_column(String(255), nullable=False)
+    bron: Mapped[str] = mapped_column(String(100), nullable=False)
 
     document: Mapped[Document] = relationship(
         "Document",
