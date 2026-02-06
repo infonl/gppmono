@@ -7,8 +7,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-
-from gpp_app.schemas import CamelModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +18,7 @@ from gpp_app.db.models.user_groups import (
     GebruikersgroepGebruiker,
     GebruikersgroepWaardelijst,
 )
+from gpp_app.schemas import CamelModel
 from gpp_app.utils.logging import get_logger
 
 router = APIRouter()
@@ -69,13 +68,13 @@ DbSession = Annotated[AsyncSession, Depends(get_session)]
 
 @router.get("/gebruikersgroepen", response_model=list[GebruikersgroepResponse])
 async def list_user_groups(
-    user: AdminUser,
+    _user: AdminUser,  # Auth required
     db: DbSession,
 ) -> list[GebruikersgroepResponse]:
     """List all user groups (admin only).
 
     Args:
-        user: Admin user
+        _user: Admin user (for auth, not used in logic)
         db: Database session
 
     Returns:
@@ -118,14 +117,14 @@ async def list_user_groups(
 @router.get("/gebruikersgroepen/{uuid}", response_model=GebruikersgroepResponse)
 async def get_user_group(
     uuid: UUID,
-    user: AdminUser,
+    _user: AdminUser,  # Auth required
     db: DbSession,
 ) -> GebruikersgroepResponse:
     """Get a single user group (admin only).
 
     Args:
         uuid: Group UUID
-        user: Admin user
+        _user: Admin user (for auth, not used in logic)
         db: Database session
 
     Returns:

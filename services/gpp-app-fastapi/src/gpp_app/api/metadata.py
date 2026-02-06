@@ -48,13 +48,13 @@ class MetadataGenerateResponse(BaseModel):
 
 @router.get("/metadata/health", response_model=MetadataHealthResponse)
 async def check_metadata_health(
-    user: Annotated[OdpcUser, Depends(get_current_user)],
+    _user: Annotated[OdpcUser, Depends(get_current_user)],  # Auth required
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> MetadataHealthResponse:
     """Check if woo-hoo metadata service is available.
 
     Args:
-        user: Current user
+        _user: Current user (for auth, not used in logic)
         settings: Application settings
 
     Returns:

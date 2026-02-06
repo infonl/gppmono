@@ -90,10 +90,7 @@ class OdpcUser:
 
         # Roles can be a list or a single string
         roles_claim = user_data.get(settings.oidc_role_claim_type, [])
-        if isinstance(roles_claim, str):
-            roles = [roles_claim]
-        else:
-            roles = list(roles_claim) if roles_claim else []
+        roles = [roles_claim] if isinstance(roles_claim, str) else list(roles_claim) if roles_claim else []
 
         is_admin = settings.oidc_admin_role in roles
 

@@ -7,7 +7,7 @@ from datetime import datetime, date, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -34,8 +34,7 @@ class EigenaarResponse(BaseModel):
     identifier: str
     weergaveNaam: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EigenaarGroepResponse(BaseModel):
@@ -44,8 +43,7 @@ class EigenaarGroepResponse(BaseModel):
     identifier: str
     weergaveNaam: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class KenmerkModel(BaseModel):
@@ -54,8 +52,7 @@ class KenmerkModel(BaseModel):
     kenmerk: str
     bron: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PublicationCreate(BaseModel):
@@ -103,8 +100,7 @@ class PublicationResponse(BaseModel):
     archiefnominatie: str = ""
     toelichtingBewaartermijn: str = ""
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PublicationListResponse(BaseModel):

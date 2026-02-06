@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from gpp_app import __version__
-from gpp_app.api import auth, formats, publications, documents, metadata, user_groups
+from gpp_app.api import auth, documents, formats, metadata, publications, user_groups
 from gpp_app.api.health import router as health_router
 from gpp_app.config import get_settings
 from gpp_app.utils.logging import get_logger, setup_logging
@@ -100,7 +100,7 @@ def create_app() -> FastAPI:
 
         # SPA fallback - serve index.html for all non-API routes
         @app.get("/{full_path:path}", include_in_schema=False)
-        async def serve_spa(request: Request, full_path: str) -> FileResponse | HTMLResponse:
+        async def serve_spa(_request: Request, full_path: str) -> FileResponse | HTMLResponse:
             """Serve static files or fallback to index.html for SPA routing."""
             # Don't serve static files for API routes
             if full_path.startswith(("api/", "docs", "redoc", "openapi.json", "health")):

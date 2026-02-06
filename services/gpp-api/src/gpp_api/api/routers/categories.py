@@ -6,7 +6,7 @@ import uuid as uuid_module
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,9 +33,7 @@ class InformationCategoryResponse(BaseModel):
     bewaartermijn: int
     toelichting_bewaartermijn: str = Field(serialization_alias="toelichtingBewaartermijn")
 
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class InformationCategoryListResponse(BaseModel):

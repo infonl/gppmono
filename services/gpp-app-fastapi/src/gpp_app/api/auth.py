@@ -10,7 +10,6 @@ from starlette.responses import RedirectResponse
 
 from gpp_app.auth.oidc import (
     OdpcUser,
-    get_current_user,
     get_optional_user,
     handle_callback,
     login_redirect,

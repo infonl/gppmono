@@ -6,7 +6,7 @@ import uuid as uuid_module
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,9 +26,7 @@ class OrganisationResponse(BaseModel):
     rsin: str
     is_actief: bool = Field(serialization_alias="isActief")
 
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class OrganisationListResponse(BaseModel):

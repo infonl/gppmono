@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
 from gpp_app.auth.oidc import OdpcUser, get_current_user
-from gpp_app.services.gpp_api_client import GppApiClient, get_gpp_api_client
+from gpp_app.services.gpp_api_client import get_gpp_api_client
 
 router = APIRouter()
 

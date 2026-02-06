@@ -10,7 +10,7 @@ from typing import Annotated
 import httpx
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -43,8 +43,7 @@ class EigenaarResponse(BaseModel):
     identifier: str
     weergaveNaam: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class KenmerkModel(BaseModel):
@@ -53,8 +52,7 @@ class KenmerkModel(BaseModel):
     kenmerk: str
     bron: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BestandsdeelResponse(BaseModel):
@@ -137,8 +135,7 @@ class DocumentResponse(BaseModel):
     ontvangstdatum: str | None = None
     datumOndertekend: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DocumentListResponse(BaseModel):

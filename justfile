@@ -11,6 +11,8 @@
 # Import service-specific justfiles (allows 'just woo-hoo test', etc.)
 mod woo-hoo 'services/woo-hoo/justfile'
 mod gpp-app 'services/gpp-app/justfile'
+mod gpp-api 'services/gpp-api/justfile'
+mod gpp-app-fastapi 'services/gpp-app-fastapi/justfile'
 
 # Default recipe: show help
 default:
@@ -197,6 +199,19 @@ test:
     @echo ">>> woo-hoo tests"
     just woo-hoo::test
 
+# Run all FastAPI tests
+test-fastapi:
+    @echo "=== Running FastAPI tests ==="
+    @echo ""
+    @echo ">>> gpp-api tests"
+    just gpp-api::test
+    @echo ""
+    @echo ">>> gpp-app-fastapi tests"
+    just gpp-app-fastapi::test
+    @echo ""
+    @echo ">>> woo-hoo tests"
+    just woo-hoo::test
+
 # Run gpp-app tests
 test-gpp-app:
     just gpp-app::test
@@ -212,6 +227,22 @@ test-woo-hoo:
 # Run woo-hoo tests with coverage
 test-woo-hoo-cov:
     just woo-hoo::test-cov
+
+# Run gpp-api tests
+test-gpp-api:
+    just gpp-api::test
+
+# Run gpp-api tests with coverage
+test-gpp-api-cov:
+    just gpp-api::test-cov
+
+# Run gpp-app-fastapi tests
+test-gpp-app-fastapi:
+    just gpp-app-fastapi::test
+
+# Run gpp-app-fastapi tests with coverage
+test-gpp-app-fastapi-cov:
+    just gpp-app-fastapi::test-cov
 
 # =============================================================================
 # BUILD & LINT
@@ -238,6 +269,19 @@ lint:
     @echo ">>> woo-hoo lint"
     just woo-hoo::lint
 
+# Lint FastAPI services
+lint-fastapi:
+    @echo "=== Linting FastAPI code ==="
+    @echo ""
+    @echo ">>> gpp-api lint"
+    just gpp-api::lint
+    @echo ""
+    @echo ">>> gpp-app-fastapi lint"
+    just gpp-app-fastapi::lint
+    @echo ""
+    @echo ">>> woo-hoo lint"
+    just woo-hoo::lint
+
 # Lint gpp-app
 lint-gpp-app:
     just gpp-app::lint
@@ -245,6 +289,14 @@ lint-gpp-app:
 # Lint woo-hoo
 lint-woo-hoo:
     just woo-hoo::lint
+
+# Lint gpp-api
+lint-gpp-api:
+    just gpp-api::lint
+
+# Lint gpp-app-fastapi
+lint-gpp-app-fastapi:
+    just gpp-app-fastapi::lint
 
 # Format all code (delegates to service-specific justfiles)
 format:

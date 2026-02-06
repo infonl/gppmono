@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 import httpx
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 
 from gpp_app.auth.oidc import OdpcUser, get_current_user
 from gpp_app.config import get_settings
-from gpp_app.services.gpp_api_client import GppApiClient, get_gpp_api_client
+from gpp_app.services.gpp_api_client import get_gpp_api_client
 
 router = APIRouter()
 

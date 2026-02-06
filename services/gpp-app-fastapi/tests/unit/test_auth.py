@@ -13,7 +13,8 @@ async def test_me_endpoint_dev_mode(client):
     data = response.json()
 
     # In dev mode (no OIDC configured), should return dev user
-    assert data["is_logged_in"] is True
-    assert data["is_admin"] is True
+    # Note: MeResponse uses serialization_alias for camelCase output
+    assert data["isLoggedIn"] is True
+    assert data["isAdmin"] is True
     assert data["id"] == "dev-user"
-    assert data["full_name"] == "Development User"
+    assert data["fullName"] == "Development User"

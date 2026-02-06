@@ -61,5 +61,5 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-# Alias for backwards compatibility
-engine = property(get_engine)
+# Note: Don't create an 'engine' variable here as it conflicts with the module name.
+# Use get_engine() directly instead.

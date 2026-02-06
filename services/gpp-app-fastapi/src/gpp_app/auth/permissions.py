@@ -42,16 +42,16 @@ AuthenticatedUser = Annotated[OdpcUser, Depends(get_current_user)]
 
 
 async def get_user_waardelijsten(
-    user: OdpcUser,
-    db_session: object,  # Will be AsyncSession when implemented
+    _user: OdpcUser,  # TODO: use when implemented
+    _db_session: object,  # Will be AsyncSession when implemented
 ) -> list[str]:
     """Get the value lists (waardelijsten) accessible to a user.
 
     A user can access value lists through their group memberships.
 
     Args:
-        user: Current user
-        db_session: Database session
+        _user: Current user
+        _db_session: Database session
 
     Returns:
         List of value list identifiers the user can access
@@ -64,8 +64,8 @@ async def get_user_waardelijsten(
 
 async def check_publication_access(
     user: OdpcUser,
-    publication_uuid: str,
-    db_session: object,  # Will be AsyncSession when implemented
+    _publication_uuid: str,  # TODO: use when implemented
+    _db_session: object,  # Will be AsyncSession when implemented
 ) -> bool:
     """Check if a user can access a specific publication.
 
@@ -77,18 +77,15 @@ async def check_publication_access(
 
     Args:
         user: Current user
-        publication_uuid: Publication UUID to check
-        db_session: Database session
+        _publication_uuid: Publication UUID to check (TODO: use when implemented)
+        _db_session: Database session (TODO: use when implemented)
 
     Returns:
         True if user can access the publication
     """
-    if user.is_admin:
-        return True
-
     # TODO: Implement with database query
     # 1. Check if user.id matches publication.eigenaar.external_id
     # 2. Check if user is in publication.eigenaar_groep
     # 3. Check if publication's information categories are in user's accessible value lists
 
-    return False
+    return user.is_admin
