@@ -276,8 +276,8 @@ services:
       LLM_TEMPERATURE: 0.1
       LLM_TIMEOUT_SECONDS: 60
       LLM_MAX_RETRIES: 3
-      # GPP Integration
-      GPP_PUBLICATIEBANK_URL: http://publicatiebank:8000
+      # GPP Integration - point to gpp-api (FastAPI) which shares database with publicatiebank
+      GPP_PUBLICATIEBANK_URL: http://gpp-api:8000
       GPP_API_TOKEN: ${ODRC_API_KEY:-insecure-ea1a8d297e3b2d3313b8a30b18959c3}
     ports:
       - "8003:8000"
@@ -310,8 +310,8 @@ services:
       # OpenZaak Integration
       OPENZAAK_DOCUMENTS_API_URL: http://openzaak:8000/documenten/api/v1
       OPENZAAK_CATALOGI_API_URL: http://openzaak:8000/catalogi/api/v1
-      OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-}
-      OPENZAAK_SECRET: ${OPENZAAK_SECRET:-}
+      OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-woo-publications-dev}
+      OPENZAAK_SECRET: ${OPENZAAK_SECRET:-insecure-yQL9Rzh4eHGVmYx5w3J2gu}
       # GPP Zoeken (Search)
       GPP_ZOEKEN_URL: ${GPP_ZOEKEN_URL:-}
       GPP_ZOEKEN_API_KEY: ${GPP_ZOEKEN_API_KEY:-}
@@ -354,8 +354,8 @@ services:
       # OpenZaak Integration
       OPENZAAK_DOCUMENTS_API_URL: http://openzaak:8000/documenten/api/v1
       OPENZAAK_CATALOGI_API_URL: http://openzaak:8000/catalogi/api/v1
-      OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-}
-      OPENZAAK_SECRET: ${OPENZAAK_SECRET:-}
+      OPENZAAK_CLIENT_ID: ${OPENZAAK_CLIENT_ID:-woo-publications-dev}
+      OPENZAAK_SECRET: ${OPENZAAK_SECRET:-insecure-yQL9Rzh4eHGVmYx5w3J2gu}
       # GPP Zoeken (Search)
       GPP_ZOEKEN_URL: ${GPP_ZOEKEN_URL:-}
       GPP_ZOEKEN_API_KEY: ${GPP_ZOEKEN_API_KEY:-}

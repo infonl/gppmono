@@ -111,9 +111,10 @@ async def generate_metadata(
 
     try:
         async with httpx.AsyncClient() as client:
+            # woo-hoo expects document_uuid as query parameter, not JSON body
             response = await client.post(
                 f"{settings.woo_hoo_base_url}/api/v1/metadata/generate-from-publicatiebank",
-                json={"document_uuid": document_uuid},
+                params={"document_uuid": document_uuid},
                 timeout=settings.woo_hoo_generate_timeout_seconds,
             )
             response.raise_for_status()

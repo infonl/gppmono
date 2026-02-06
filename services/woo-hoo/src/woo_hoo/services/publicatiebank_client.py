@@ -237,17 +237,21 @@ class PublicatiebankClient:
             size=len(content),
         )
 
+        # Support both snake_case (publicatiebank) and camelCase (gpp-api) field names
+        def get_field(data: dict, snake_case: str, camel_case: str, default=None):
+            return data.get(snake_case) or data.get(camel_case) or default
+
         return PublicatiebankDocument(
             uuid=metadata["uuid"],
-            officiele_titel=metadata["officiele_titel"],
-            verkorte_titel=metadata.get("verkorte_titel"),
-            omschrijving=metadata.get("omschrijving"),
-            bestandsnaam=metadata["bestandsnaam"],
-            bestandsformaat=metadata["bestandsformaat"],
-            bestandsomvang=metadata["bestandsomvang"],
-            publicatiestatus=metadata["publicatiestatus"],
+            officiele_titel=get_field(metadata, "officiele_titel", "officieleTitel"),
+            verkorte_titel=get_field(metadata, "verkorte_titel", "verkorteTitel"),
+            omschrijving=get_field(metadata, "omschrijving", "omschrijving"),
+            bestandsnaam=get_field(metadata, "bestandsnaam", "bestandsnaam"),
+            bestandsformaat=get_field(metadata, "bestandsformaat", "bestandsformaat"),
+            bestandsomvang=get_field(metadata, "bestandsomvang", "bestandsomvang"),
+            publicatiestatus=get_field(metadata, "publicatiestatus", "publicatiestatus"),
             content=content,
-            kenmerken=metadata.get("kenmerken", []),
+            kenmerken=get_field(metadata, "kenmerken", "kenmerken", []),
         )
 
     async def get_publication_metadata(self, publication_uuid: str | UUID) -> dict:

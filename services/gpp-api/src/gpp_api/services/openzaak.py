@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import time
 import uuid
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import httpx
+from authlib.jose import jwt
 
 from gpp_api.config import get_settings
 from gpp_api.utils.logging import get_logger
@@ -17,6 +19,38 @@ if TYPE_CHECKING:
     from gpp_api.db.models.metadata import InformationCategory
 
 logger = get_logger(__name__)
+
+
+def create_zgw_jwt(client_id: str, secret: str, user_id: str = "gpp-api") -> str:
+    """Create a ZGW JWT token for OpenZaak authentication.
+
+    This follows the ZGW (Zaakgericht Werken) JWT specification used by zgw-consumers.
+
+    Args:
+        client_id: API client ID
+        secret: API secret
+        user_id: User identifier for audit trail
+
+    Returns:
+        JWT token string
+    """
+    now = int(time.time())
+
+    header = {
+        "typ": "JWT",
+        "alg": "HS256",
+        "client_identifier": client_id,
+    }
+
+    payload = {
+        "iss": client_id,
+        "iat": now,
+        "client_id": client_id,
+        "user_id": user_id,
+        "user_representation": user_id,
+    }
+
+    return jwt.encode(header, payload, secret).decode("utf-8")
 
 
 @dataclass
@@ -88,11 +122,15 @@ class OpenZaakClient:
     def _get_auth_headers(self) -> dict[str, str]:
         """Get authentication headers for OpenZaak.
 
-        OpenZaak uses JWT-based auth or API key.
+        Uses ZGW JWT authentication following zgw-consumers pattern.
         """
-        # For now, simple token auth - in production, implement JWT
+        token = create_zgw_jwt(
+            client_id=self._settings.openzaak_client_id,
+            secret=self._settings.openzaak_secret,
+            user_id="gpp-api",
+        )
         headers = {
-            "Authorization": f"Token {self._settings.openzaak_secret}",
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -375,10 +413,21 @@ class OpenZaakClient:
         """
         client = await self._get_client()
 
+        # Use auth headers but with Accept for binary content
+        token = create_zgw_jwt(
+            client_id=self._settings.openzaak_client_id,
+            secret=self._settings.openzaak_secret,
+            user_id="gpp-api",
+        )
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "*/*",  # Accept any content type for download
+        }
+
         # Get the download URL
         response = await client.get(
             f"{document_url}/download",
-            headers=self._get_auth_headers(),
+            headers=headers,
             follow_redirects=True,
         )
 

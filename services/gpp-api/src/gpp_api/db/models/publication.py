@@ -305,9 +305,10 @@ class Document(Base, IDMixin, UUIDMixin, TimestampMixin):
     )
 
     # OpenZaak Documents API integration
+    # Note: document_service_id references zgw_consumers_service table but we don't
+    # define that FK here since we're connecting to an existing publicatiebank database
     document_service_id: Mapped[int | None] = mapped_column(
         Integer,
-        ForeignKey("zgw_consumers_service.id"),
         nullable=True,
     )
     document_uuid: Mapped[str | None] = mapped_column(

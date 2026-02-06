@@ -6,13 +6,16 @@ import uuid as uuid_module
 from datetime import datetime, date, timezone
 from typing import Annotated
 
+import httpx
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from gpp_api.api.deps import get_db
+from gpp_api.services.openzaak import OpenZaakClient, OpenZaakError
 from gpp_api.db.models import (
     Document,
     DocumentIdentifier,
@@ -423,10 +426,10 @@ async def upload_document_file(
 async def download_document_file(
     doc_uuid: uuid_module.UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> dict:
-    """Download file content for a document.
+) -> StreamingResponse:
+    """Download file content for a document from OpenZaak.
 
-    TODO: Implement file download via OpenZaak Documents API.
+    Fetches the document from OpenZaak Documents API using the stored reference.
     """
     result = await db.execute(
         select(Document).where(Document.uuid == doc_uuid)
@@ -439,4 +442,49 @@ async def download_document_file(
             detail="Document not found",
         )
 
-    return {"uuid": str(doc_uuid), "status": "not_implemented"}
+    if not doc.document_uuid:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document not yet uploaded to OpenZaak",
+        )
+
+    openzaak_client = OpenZaakClient()
+    document_url = f"/enkelvoudiginformatieobjecten/{doc.document_uuid}"
+
+    try:
+        content = await openzaak_client.download_document_content(document_url)
+
+        # Determine content type from bestandsformaat or default
+        content_type = "application/octet-stream"
+        if doc.bestandsformaat:
+            # bestandsformaat might be a MIME type or UUID reference
+            if "/" in doc.bestandsformaat:
+                content_type = doc.bestandsformaat
+            elif doc.bestandsnaam and doc.bestandsnaam.endswith(".pdf"):
+                content_type = "application/pdf"
+
+        return StreamingResponse(
+            iter([content]),
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{doc.bestandsnaam}"',
+            },
+        )
+
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found in OpenZaak",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"OpenZaak error: {e.response.status_code}",
+        )
+    except (httpx.RequestError, OpenZaakError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to connect to OpenZaak: {e}",
+        )
+    finally:
+        await openzaak_client.close()
