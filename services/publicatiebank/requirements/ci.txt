@@ -119,7 +119,7 @@ commonground-api-common==2.7.0
     #   open-api-framework
 coverage==7.9.2
     # via -r requirements/test-tools.in
-cryptography==45.0.5
+cryptography==46.0.5
     # via
     #   -c requirements/base.txt
     #   -r requirements/base.txt
