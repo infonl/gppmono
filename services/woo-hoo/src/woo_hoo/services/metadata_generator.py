@@ -78,7 +78,7 @@ class MetadataGenerator:
     async def generate(
         self,
         request: MetadataGenerationRequest,
-        output_mode: OutputMode = OutputMode.XML,
+        output_mode: OutputMode = OutputMode.XML, 
         validate_xml: bool = False,
     ) -> MetadataGenerationResponse:
         """Generate DIWOO metadata for a document.
