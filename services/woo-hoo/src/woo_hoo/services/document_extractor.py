@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class DocumentExtractionError(Exception):
     """Raised when document text extraction fails."""
 
-    pass
+    pass 
 
 
 def extract_text_from_pdf(content: bytes) -> str:

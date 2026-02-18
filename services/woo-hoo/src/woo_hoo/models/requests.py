@@ -24,7 +24,7 @@ class PublisherHint(BaseModel):
 class DocumentContent(BaseModel):
     """Document content for metadata generation."""
 
-    text: str = Field(
+    text: str = Field( 
         ...,
         min_length=10,
         max_length=500_000_000,
