@@ -1,0 +1,126 @@
+# GPP Caddy Configuration
+# Reverse proxy for routing requests to appropriate services
+
+:80 {
+    # Health check endpoint for Caddy itself
+    handle /caddy-health {
+        respond "healthy" 200
+    }
+
+    # =========================================================================
+    # GPP-APP (BFF) Routes - Authentication and user-facing endpoints
+    # =========================================================================
+
+    # Authentication endpoints
+    handle /api/me {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/challenge {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/callback {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/logoff {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+
+    # User groups (managed by BFF)
+    handle /api/v1/gebruikersgroepen* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/v1/mijn-gebruikersgroepen* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+
+    # Publications and documents via BFF (with auth)
+    handle /api/v1/publicaties* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/v1/documenten* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+
+    # Metadata endpoints via BFF
+    handle /api/v1/metadata* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/v1/organisaties* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/v1/informatiecategorieen* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+    handle /api/v1/onderwerpen* {
+        reverse_proxy gpp-app-fastapi:8000
+    }
+
+    # =========================================================================
+    # GPP-API (Data Layer) Routes - Direct API access (v2)
+    # =========================================================================
+
+    # API v2 endpoints (direct to gpp-api)
+    handle /api/v2/* {
+        reverse_proxy gpp-api:8000
+    }
+
+    # Admin interface
+    handle /admin/* {
+        reverse_proxy gpp-api:8000
+    }
+
+    # OpenAPI documentation
+    handle /docs {
+        reverse_proxy gpp-api:8000
+    }
+    handle /redoc {
+        reverse_proxy gpp-api:8000
+    }
+    handle /openapi.json {
+        reverse_proxy gpp-api:8000
+    }
+
+    # =========================================================================
+    # WOO-HOO Routes - Metadata generation service
+    # =========================================================================
+
+    handle /woo-hoo/* {
+        uri strip_prefix /woo-hoo
+        reverse_proxy woo-hoo:8000
+    }
+
+    # =========================================================================
+    # Health check routes for all services
+    # =========================================================================
+
+    handle /health/gpp-api {
+        reverse_proxy gpp-api:8000 {
+            rewrite /health
+        }
+    }
+    handle /health/gpp-app {
+        reverse_proxy gpp-app-fastapi:8000 {
+            rewrite /health
+        }
+    }
+    handle /health/woo-hoo {
+        reverse_proxy woo-hoo:8000 {
+            rewrite /health
+        }
+    }
+
+    # =========================================================================
+    # Frontend - Serve Vue.js SPA
+    # =========================================================================
+
+    # Route all non-API requests to the frontend
+    handle {
+        reverse_proxy gpp-frontend:80
+    }
+
+    # Logging
+    log {
+        output stdout
+        format json
+    }
+}

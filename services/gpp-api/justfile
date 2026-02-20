@@ -1,0 +1,72 @@
+# GPP API Justfile
+
+# Default recipe
+default:
+    @just --list
+
+# Install dependencies
+install:
+    uv sync
+
+# Install with dev dependencies
+install-dev:
+    uv sync --all-extras
+
+# Run development server
+dev:
+    uv run uvicorn gpp_api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Run production server
+run:
+    uv run uvicorn gpp_api.main:app --host 0.0.0.0 --port 8000
+
+# Run worker process
+worker:
+    uv run python -m gpp_api.workers
+
+# Run tests
+test *args:
+    uv run pytest {{args}}
+
+# Run tests with coverage
+test-cov:
+    uv run pytest --cov=gpp_api --cov-report=term-missing
+
+# Format code
+fmt:
+    uv run ruff format src tests
+
+# Lint code
+lint:
+    uv run ruff check src tests
+
+# Lint and fix
+lint-fix:
+    uv run ruff check --fix src tests
+
+# Type check
+typecheck:
+    uv run pyrefly check src
+
+# Run all checks
+check: lint typecheck test
+
+# Generate Alembic migration
+migration name:
+    uv run alembic revision --autogenerate -m "{{name}}"
+
+# Run migrations
+migrate:
+    uv run alembic upgrade head
+
+# Rollback one migration
+migrate-down:
+    uv run alembic downgrade -1
+
+# Build Docker image
+docker-build:
+    docker build -t gpp-api:latest .
+
+# Run Docker container
+docker-run:
+    docker run --rm -p 8000:8000 gpp-api:latest
