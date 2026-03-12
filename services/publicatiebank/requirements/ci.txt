@@ -808,7 +808,7 @@ textile==4.0.3
     #   -c requirements/base.txt
     #   -r requirements/base.txt
     #   django-markup
-tornado==6.5.1
+tornado==6.5.5
     # via
     #   -c requirements/base.txt
     #   -r requirements/base.txt
