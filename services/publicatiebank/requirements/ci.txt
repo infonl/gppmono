@@ -624,7 +624,7 @@ pygments==2.19.2
     #   django-markup
     #   sphinx
     #   sphinx-tabs
-pyjwt==2.10.1
+pyjwt==2.12.0
     # via
     #   -c requirements/base.txt
     #   -r requirements/base.txt
