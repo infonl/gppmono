@@ -706,7 +706,7 @@ regex==2024.11.6
     #   -c requirements/base.txt
     #   -r requirements/base.txt
     #   textile
-requests==2.32.5
+requests==2.33.0
     # via
     #   -c requirements/base.txt
     #   -r requirements/base.txt
