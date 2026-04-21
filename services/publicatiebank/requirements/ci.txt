@@ -660,7 +660,7 @@ python-decouple==3.8
     #   -r requirements/base.txt
     #   maykin-common
     #   open-api-framework
-python-dotenv==1.1.1
+python-dotenv==1.2.2
     # via
     #   -c requirements/base.txt
     #   -r requirements/base.txt
