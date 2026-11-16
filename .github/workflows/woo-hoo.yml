@@ -1,0 +1,57 @@
+# Root copy of services/woo-hoo/.github/workflows/pr.yml, which never runs from
+# its vendored location. Jobs collapsed from five to three (lint folds in the
+# format check; helm-lint left out since the chart is unchanged by dependency
+# work). pyrefly stays non-blocking exactly as upstream has it.
+name: woo-hoo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/woo-hoo/**'
+      - '.github/workflows/woo-hoo.yml'
+  pull_request:
+    paths:
+      - 'services/woo-hoo/**'
+      - '.github/workflows/woo-hoo.yml'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.12'
+
+defaults:
+  run:
+    working-directory: services/woo-hoo
+
+jobs:
+  lint:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --extra dev
+      - run: uv run ruff check src tests
+      - run: uv run ruff format --check src tests
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --extra dev
+      - run: uv run pytest tests -v --cov=woo_hoo --cov-report=term-missing
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --extra dev
+      - run: uv run pyrefly check src
+        continue-on-error: true  # matches upstream: type errors do not block

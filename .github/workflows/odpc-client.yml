@@ -1,0 +1,39 @@
+# odpc.client had no CI of its own anywhere. These are the same four gates the
+# package.json scripts expose, which is what caught nothing when minimatch was
+# forced across eight major versions in #52 (verified by hand instead).
+name: odpc.client
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/gpp-app/odpc.client/**'
+      - '.github/workflows/odpc-client.yml'
+  pull_request:
+    paths:
+      - 'services/gpp-app/odpc.client/**'
+      - '.github/workflows/odpc-client.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: services/gpp-app/odpc.client
+
+jobs:
+  check:
+    name: Type-check, lint, build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/gpp-app/odpc.client/package-lock.json
+      - run: npm ci
+      - run: npm run type-check
+      # eslint directly rather than `npm run lint`, which passes --fix and so
+      # would rewrite sources instead of failing on them.
+      - run: npx eslint .
+      - run: npm run build-only
+      - run: npx vitest run
