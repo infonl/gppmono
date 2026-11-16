@@ -760,7 +760,7 @@ smartypants==2.0.2
     #   django-markup
 snowballstemmer==3.0.1
     # via sphinx
-soupsieve==2.10
+soupsieve==4.1.1
     # via beautifulsoup4
 sphinx==8.2.3
     # via
