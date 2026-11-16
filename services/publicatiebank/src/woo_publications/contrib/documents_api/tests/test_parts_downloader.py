@@ -8,7 +8,14 @@ from woo_publications.utils.tests.vcr import VCRMixin
 
 from ..client import FilePart, PartsDownloader, get_client
 
-MOCK_SERVICE = ServiceFactory.build(api_root="http://localhost/")
+# Credentials matter even though nothing authenticates here: get_client signs a
+# ZGW JWT from the service, and pyjwt refuses an empty HMAC key (2.10+), so a
+# bare build() makes every test in this class error out before it starts.
+MOCK_SERVICE = ServiceFactory.build(
+    api_root="http://localhost/",
+    client_id="test-client-id",
+    secret="test-secret",
+)
 
 
 class PartsDownloaderTests(VCRMixin, SimpleTestCase):
