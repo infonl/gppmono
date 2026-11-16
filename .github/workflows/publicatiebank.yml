@@ -72,6 +72,9 @@ jobs:
           optimize-postgres: 'yes'
           pg-service: 'postgres'
           setup-node: 'yes'
+          # The service's .nvmrc is not at the repo root, which is where
+          # setup-node looks by default.
+          nvmrc-custom-dir: 'services/publicatiebank'
           working-directory: services/publicatiebank
 
       - name: Add host.docker.internal hostname to DNS resolution
