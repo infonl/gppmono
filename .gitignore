@@ -344,3 +344,17 @@ services/woo-hoo/data/samples/*.metadata.json
 *.swp
 *~
 .sass-cache/
+
+# publicatiebank keeps hand-written sources in bin/ and build/. The generic
+# [Bb]in/ and build/ rules above are meant for virtualenvs and build output,
+# and they also hide these, which breaks the service from a fresh clone:
+# the Dockerfile does `COPY ./bin/docker_start.sh`, webpack.config.js does
+# `require('./build/paths')`, and the compiled requirement files name
+# ./bin/compile_dependencies.sh as the command that regenerates them.
+!services/publicatiebank/bin/
+!services/publicatiebank/build/
+
+# Except the production-to-staging tooling. It carries a password hash and
+# production connection details, so whether it belongs in version control is
+# the service owner's call, not a side effect of fixing CI.
+services/publicatiebank/bin/live2staging*
