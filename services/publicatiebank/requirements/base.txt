@@ -24,7 +24,7 @@ attrs==25.3.0
     #   referencing
 billiard==4.2.4
     # via celery
-bleach==6.2.0
+bleach==6.4.0
     # via
     #   django-markup
     #   open-api-framework
@@ -260,7 +260,7 @@ glom==24.11.0
     # via mozilla-django-oidc-db
 humanize==4.12.3
     # via flower
-idna==3.10
+idna==3.20
     # via requests
 inflection==0.5.1
     # via drf-spectacular
@@ -322,7 +322,7 @@ pydantic-core==2.33.2
     # via pydantic
 pydantic-settings==2.10.1
     # via django-setup-configuration
-pygments==2.19.2
+pygments==2.21.0
     # via django-markup
 pyjwt==2.15.1
     # via
@@ -342,7 +342,7 @@ python-decouple==3.8
     # via
     #   maykin-common
     #   open-api-framework
-python-dotenv==1.1.1
+python-dotenv==1.2.4
     # via
     #   open-api-framework
     #   pydantic-settings
@@ -365,7 +365,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 regex==2024.11.6
     # via textile
-requests==2.32.5
+requests==2.34.2
     # via
     #   ape-pie
     #   commonground-api-common
@@ -401,7 +401,7 @@ structlog==25.4.0
     #   django-structlog
 textile==4.0.3
     # via django-markup
-tornado==6.5.10
+tornado==6.6.1
     # via flower
 typing-extensions==4.14.1
     # via
