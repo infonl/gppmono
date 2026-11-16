@@ -358,3 +358,12 @@ services/woo-hoo/data/samples/*.metadata.json
 # production connection details, so whether it belongs in version control is
 # the service owner's call, not a side effect of fixing CI.
 services/publicatiebank/bin/live2staging*
+
+# publicatiebank's log/ directory has to exist before Django starts: its
+# logging config writes log/application.jsonl, and a missing directory makes
+# django.setup() raise. Upstream keeps a README in it for that reason, which
+# the generic [Ll]og/ rule above hides. Track the README only, so the
+# directory exists from a clone while actual log output stays ignored.
+!services/publicatiebank/log/
+services/publicatiebank/log/*
+!services/publicatiebank/log/README.rst
