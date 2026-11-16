@@ -147,18 +147,14 @@ class PublicationMetadataSuggestion(BaseModel):
     - Keywords/themes aggregated from all documents
     """
 
-    publication_metadata: DiWooMetadata = Field(
-        ..., description="Aggregated metadata for the publication"
-    )
+    publication_metadata: DiWooMetadata = Field(..., description="Aggregated metadata for the publication")
     overall_confidence: ConfidenceScores = Field(
         ..., description="Overall confidence scores (averaged from all documents)"
     )
     document_suggestions: list[DocumentMetadataSuggestion] = Field(
         default_factory=list, description="Per-document metadata suggestions"
     )
-    aggregated_keywords: list[str] = Field(
-        default_factory=list, description="Keywords aggregated from all documents"
-    )
+    aggregated_keywords: list[str] = Field(default_factory=list, description="Keywords aggregated from all documents")
     model_used: str = Field(..., description="LLM model that generated this suggestion")
     processing_time_ms: int = Field(..., description="Total processing time in milliseconds")
 

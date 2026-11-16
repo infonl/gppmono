@@ -315,9 +315,7 @@ class TestGenerateFromPublicatiebankEndpoint:
         with patch("woo_hoo.api.routers.metadata.PublicatiebankClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.is_configured = True
-            mock_instance.get_document = AsyncMock(
-                side_effect=DocumentNotFoundError("Document not found")
-            )
+            mock_instance.get_document = AsyncMock(side_effect=DocumentNotFoundError("Document not found"))
             mock_instance.close = AsyncMock()
             MockClient.return_value = mock_instance
 
@@ -337,9 +335,7 @@ class TestGenerateFromPublicatiebankEndpoint:
         with patch("woo_hoo.api.routers.metadata.PublicatiebankClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.is_configured = True
-            mock_instance.get_document = AsyncMock(
-                side_effect=DocumentDownloadError("Upload not completed")
-            )
+            mock_instance.get_document = AsyncMock(side_effect=DocumentDownloadError("Upload not completed"))
             mock_instance.close = AsyncMock()
             MockClient.return_value = mock_instance
 
@@ -728,7 +724,9 @@ async def test_generate_from_publication_with_mock(async_client: AsyncClient):
     assert data["documents_processed"] == 2
     assert data["documents_failed"] == 0
     assert "suggestion" in data
-    assert data["suggestion"]["publication_metadata"]["titelcollectie"]["officieleTitel"] == "Generated Publication Title"
+    assert (
+        data["suggestion"]["publication_metadata"]["titelcollectie"]["officieleTitel"] == "Generated Publication Title"
+    )
     assert "overall_confidence" in data["suggestion"]
     assert data["suggestion"]["overall_confidence"]["overall"] > 0
     assert len(data["suggestion"]["document_suggestions"]) == 2

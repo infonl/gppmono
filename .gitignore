@@ -344,3 +344,26 @@ services/woo-hoo/data/samples/*.metadata.json
 *.swp
 *~
 .sass-cache/
+
+# publicatiebank keeps hand-written sources in bin/ and build/. The generic
+# [Bb]in/ and build/ rules above are meant for virtualenvs and build output,
+# and they also hide these, which breaks the service from a fresh clone:
+# the Dockerfile does `COPY ./bin/docker_start.sh`, webpack.config.js does
+# `require('./build/paths')`, and the compiled requirement files name
+# ./bin/compile_dependencies.sh as the command that regenerates them.
+!services/publicatiebank/bin/
+!services/publicatiebank/build/
+
+# Except the production-to-staging tooling. It carries a password hash and
+# production connection details, so whether it belongs in version control is
+# the service owner's call, not a side effect of fixing CI.
+services/publicatiebank/bin/live2staging*
+
+# publicatiebank's log/ directory has to exist before Django starts: its
+# logging config writes log/application.jsonl, and a missing directory makes
+# django.setup() raise. Upstream keeps a README in it for that reason, which
+# the generic [Ll]og/ rule above hides. Track the README only, so the
+# directory exists from a clone while actual log output stays ignored.
+!services/publicatiebank/log/
+services/publicatiebank/log/*
+!services/publicatiebank/log/README.rst
