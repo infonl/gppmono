@@ -116,9 +116,9 @@ class PublicatiebankClient:
             # Read timeout needs to be higher for streaming large PDFs
             timeout_config = httpx.Timeout(
                 connect=30.0,  # Time to establish connection
-                read=300.0,    # Time to read response data (5 minutes for large files)
-                write=30.0,    # Time to write request data
-                pool=30.0,     # Time to acquire connection from pool
+                read=300.0,  # Time to read response data (5 minutes for large files)
+                write=30.0,  # Time to write request data
+                pool=30.0,  # Time to acquire connection from pool
             )
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
